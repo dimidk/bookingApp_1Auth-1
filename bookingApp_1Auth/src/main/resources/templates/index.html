@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Login</title>
+<!--    <link rel="stylesheet" th:href="@{/css/style.css}">-->
+    <style>
+        /* Basic styling for a modern look */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .login-container h2 {
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-group input:focus {
+            border-color: #0066cc;
+            outline: none;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            background-color: #0066cc;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #004a99;
+        }
+        .message {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .message.error {
+            color: #cc0000;
+        }
+        .message.success {
+            color: #00a500;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .button-container a {
+            width: 48%;
+            text-decoration: none;
+            color: #ffffff;
+            padding: 10px 0;
+            text-align: center;
+            background-color: #0066cc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .button-container a:hover {
+            background-color: #004a99;
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <div class="button-container" sec:authorize="!isAuthenticated()">
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+    </div>
+
+    <h3>Laboratory Booking Online Application</h3>
+</div>
+</body>
+</html>

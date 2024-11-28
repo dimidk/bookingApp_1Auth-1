@@ -1,0 +1,186 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset='utf-8' content="Cory Sanoy" name="Author" />
+
+
+
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+    <script src="https://cdnjs.cloudfare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudfare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet"
+          href="http//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css"/>
+    <script
+            src="http//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css"></script>
+
+
+    <script>
+        // $(document).ready(function() {
+        document.addEventListener('DOMContentLoaded', function () {
+         let calendarEl = document.getElementById('calendar');
+            // $('#calendar').fullCalendar({
+         // calendarEl.fullCalendar( {
+         const calendar = new FullCalendar.Calendar(calendarEl, {
+        //      weekends: true,
+            initialView: 'timeGridWeek',
+            editable: true,
+            businessHours: {
+                startTime: '08:00',
+                endTime: '18:00',
+            },
+                slotMinTime: "08:00",     // Earliest time displayed in the calendar
+                slotMaxTime: "18:00",
+                eventLimit: true, // allow "more" link when too many events
+            events: [
+                {
+                    title: 'All Day Event',
+                    start: '2024-11-01'
+                },
+                {
+                    title: 'Long Event',
+                    start: '2024-11-07',
+                    end: '2024-11-10'
+                },
+                {
+                    id: 999,
+                    title: 'Repeating Event',
+                    start: '2024-11-09T16:00:00'
+                },
+                {
+                    id: 999,
+                    title: 'Repeating Event',
+                    start: '2024-11-16T16:00:00'
+                },
+                {
+                    title: 'Conference',
+                    start: '2024-11-11',
+                    end: '2024-11-13'
+                },
+                {
+                    title: 'Meeting',
+                    start: '2024-11-12T10:30:00',
+                    end: '2024-11-12T12:30:00'
+                },
+                {
+                    title: 'Lunch',
+                    start: '2024-11-12T12:00:00'
+                },
+                {
+                    title: 'Meeting',
+                    start: '2024-11-12T14:30:00'
+                },
+                {
+                    title: 'Happy Hour',
+                    start: '2024-11-12T17:30:00'
+                },
+                {
+                    title: 'Dinner',
+                    start: '2024-11-12T20:00:00'
+                },
+                {
+                    title: 'Birthday Party',
+                    start: '2024-11-13T07:00:00'
+                },
+                {
+                    title: 'Click for Google',
+                    url: 'http://google.com/',
+                    start: '2024-11-28'
+                }
+            ]
+            // select: function(info) {
+            //
+            // }
+        });
+        //
+        // $(document).ready(function() {
+        //
+        //     $('#calendar').fullCalendar({
+        //         defaultDate: '2014-11-01',
+        //         editable: true,
+        //         eventLimit: true, // allow "more" link when too many events
+        //         events: [
+        //             {
+        //                 title: 'All Day Event',
+        //                 start: '2014-11-01'
+        //             },
+        //             {
+        //                 title: 'Long Event',
+        //                 start: '2014-11-07',
+        //                 end: '2014-11-10'
+        //             },
+        //             {
+        //                 id: 999,
+        //                 title: 'Repeating Event',
+        //                 start: '2014-11-09T16:00:00'
+        //             },
+        //             {
+        //                 id: 999,
+        //                 title: 'Repeating Event',
+        //                 start: '2014-11-16T16:00:00'
+        //             },
+        //             {
+        //                 title: 'Conference',
+        //                 start: '2014-11-11',
+        //                 end: '2014-11-13'
+        //             },
+        //             {
+        //                 title: 'Meeting',
+        //                 start: '2014-11-12T10:30:00',
+        //                 end: '2014-11-12T12:30:00'
+        //             },
+        //             {
+        //                 title: 'Lunch',
+        //                 start: '2014-11-12T12:00:00'
+        //             },
+        //             {
+        //                 title: 'Meeting',
+        //                 start: '2014-11-12T14:30:00'
+        //             },
+        //             {
+        //                 title: 'Happy Hour',
+        //                 start: '2014-11-12T17:30:00'
+        //             },
+        //             {
+        //                 title: 'Dinner',
+        //                 start: '2014-11-12T20:00:00'
+        //             },
+        //             {
+        //                 title: 'Birthday Party',
+        //                 start: '2014-11-13T07:00:00'
+        //             },
+        //             {
+        //                 title: 'Click for Google',
+        //                 url: 'http://google.com/',
+        //                 start: '2014-11-28'
+        //             }
+        //         ]
+        //     });
+         calendar.render();
+        });
+
+    </script>
+
+    <style>
+
+        body {
+            margin: 40px 10px;
+            padding: 0;
+            font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+            font-size: 14px;
+        }
+
+        #calendar {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+    </style>
+</head>
+<body>
+<div id='calendar' th:id="calendar"></div>
+</body>
+</html>

@@ -1,0 +1,113 @@
+package com.exam.bookingapp_1.service;
+
+import com.exam.bookingapp_1.model.BookingLab;
+import com.exam.bookingapp_1.repository.BookingLabRepository;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+@AllArgsConstructor(onConstructor = @__(@Autowired))
+@Slf4j
+public class BookingLabService {
+
+    @Autowired
+    private final BookingLabRepository bookingLabRepository;
+
+
+    public void add(BookingLab bookingLab) {
+        bookingLabRepository.save(bookingLab);
+    }
+
+    public long countAll() {
+        return bookingLabRepository.count();
+    }
+
+    public List<BookingLab> getAll() {
+        return bookingLabRepository.findAll();
+    }
+
+    public List<BookingLab> getByLabname(String labname) {
+        return bookingLabRepository.getBookingLabsByLabname(labname);
+    }
+
+    public int getBookingLabMaxId() {
+        return bookingLabRepository.findTopIdBookingLab();
+    }
+
+    public boolean existsBookingLab(int id) {
+        return bookingLabRepository.existsById(id);
+    }
+
+    public List<BookingLab> findBookingLabByName(String title) {
+
+        return bookingLabRepository.getBookingLabsByLabname(title);
+    }
+
+    public boolean deleteBookingLab(int id) {
+
+        bookingLabRepository.deleteById(id);
+        return true;
+    }
+
+    public Optional<BookingLab> updateBookingLab(BookingLab bookingLab) {
+
+        Optional<BookingLab> updated = null;
+
+        updated = bookingLabRepository.getBookingLabById(bookingLab.getId());
+        log.info("BookingLabService: get info for record to be update {} {} {}", updated.get().getLabname(),updated.get().getStart(), updated.get().getEnd());
+        log.info("this record to be updated with {} {}",bookingLab.getLabname(),bookingLab.getEnd());
+
+
+//        if (bookingLabRepository.existsBookingLabByLabnameAndEndBetween(updated.get().getLabname(), updated.get().getStart(), bookingLab.getEnd())) {
+//
+//            log.info("BookingLabService: try to update on reserved date");
+//
+//            return Optional.empty();
+//        }
+
+        log.info("Updating booking lab");
+        log.info("update booking with new date {} ", bookingLab.getEnd());
+        updated.get().setEnd(bookingLab.getEnd());
+
+        bookingLabRepository.save(updated.get());
+
+
+        return updated;
+    }
+
+
+    public boolean dateBookingLab(BookingLab bookingLab) {
+
+        boolean a = false;
+
+        if (bookingLabRepository.existsBookingLabByLabnameAndStartBetween(bookingLab.getLabname(), bookingLab.getStart(), bookingLab.getEnd())) {
+            a = true;
+        }
+
+        return a;
+
+    }
+
+    public List<BookingLab> getBookingLabsName(List<BookingLab> bookingLabs, String labname) {
+
+        List<BookingLab> bookingLabsList = bookingLabs.stream().filter(bookingLab -> bookingLab.getLabname().compareTo(labname) == 0)
+                .collect(Collectors.toList());
+
+        return bookingLabsList;
+
+
+    }
+
+    public Optional<BookingLab> getBookingLabById(int bookingLabId) {
+
+
+       return bookingLabRepository.getBookingLabById(bookingLabId);
+    }
+
+}

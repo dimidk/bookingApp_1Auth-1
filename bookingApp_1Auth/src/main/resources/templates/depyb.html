@@ -1,0 +1,696 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+
+
+
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!--  <script src="https://cdnjs.cloudfare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>-->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <link rel="stylesheet"
+        href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
+  <script
+          src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!--  <script src="https://code.jquery.com/jquery-2.2.4.min.js" />-->
+
+
+  <!--  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet" />-->
+
+  <!--  //I use the media=print and loads my stylesheet-->
+  <link rel="stylesheet" media="print"  href="/css/assets_css_fullcalendar.print.css">
+  <link rel="stylesheet" href="/css/fullcalendar.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+
+
+  <style>
+
+    body {
+      margin: 40px 10px;
+      padding: 0;
+      font-family: Helvetica,Arial,Verdana,sans-serif;
+      font-size: 14px;
+    }
+
+    #calendar {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .no-titlebar .ui-dialog-titlebar {
+      display: none;
+    }
+    #description { margin-bottom:12px; width:100%; padding: .4em; }
+
+    #fieldset { padding:0; border:0; margin-top:25px; height: 200px;}
+    .hide_block
+    {
+      display:none  !important;
+    }
+
+
+  </style>
+  <title></title>
+
+
+</head>
+<body>
+
+<!--<div th:replace="header :: header"></div>-->
+<div th:replace="~{header :: header}"></div>
+
+
+<div id='script-warning'  >
+  <div class="btn-group-vertical btn-group-sm" role="group" aria-label="author button">
+
+    <h3>Εργαστήριο: ΔΕΠΥ Β</h3>
+    <!--    <p>Author: </p>
+    th:text="${param.}"-->
+    <div class="btn btn-info">
+      <button type="button" class="btn btn-info" id="whichuser">Author:</button>
+    </div>
+
+  </div>
+</div>
+
+<div id='calendar'  th:id="calendar"></div>
+
+</body>
+</html>
+
+
+<script>
+
+  const displayInputForDate = document.getElementById('startDate');
+  const displayInputForDateEnd = document.getElementById('endDate');
+
+  const repetitionBook = document.getElementById('bookRepeat');
+  const depyA = document.querySelector("#A");
+  const depyB = document.querySelector("#B");
+  const depyC = document.querySelector("#C");
+  let depyId ='';
+  let whichLab ='';
+  //this is the authenticated user that is displayed
+  let whichLabUser = '';
+
+  //this is the authenticated user used for events
+  let whichLabUsername = '';
+
+  let dateStart = '';
+  let dateEnd = '';
+  let titleEvent = '';
+  let newEvent = null;
+  let myModal = null;
+  let editDialog = null;
+  let modifiedEvent = null;
+  let token = null;
+
+
+  //authenticated user is tried to fetched;
+
+  async function getAuthenticatedUser() {
+
+    let authenticatedUser;
+
+    let response = await fetch('/user',{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    if (response.ok) {
+      authenticatedUser = await response.json();
+      console.log("getAuthenticatedUser: authenticated user: "+ authenticatedUser.username);
+
+      whichLabUsername = authenticatedUser.username;
+
+      return authenticatedUser;
+
+    }
+    else {
+      console.error("not user is correct");
+      return null;
+    }
+  }
+
+  getAuthenticatedUser().then((authUser) => {
+    whichLabUser = document.getElementById("whichuser");
+    whichLabUser.textContent = authUser.username;
+  });
+
+
+  console.log("authUser in main script is whichLabUsername: " + whichLabUsername);
+
+  function saveEvent(event) {
+
+    let clickedEvent = {
+      id: event.id,
+      start: event.start,
+      end: event.end
+    };
+
+    getEventById(clickedEvent).then((returnedEvent) => {
+      if (returnedEvent) {
+
+      }
+
+    });
+
+  }
+  function removeEvent(event) {
+
+    let clickedEvent = {
+      id: event.id,
+      start: event.start,
+      end: event.end
+    };
+
+    getEventById(clickedEvent).then((returnedEvent) => {
+      if (returnedEvent) {
+
+      }
+
+    });
+
+  }
+
+  function showInputButtons() {
+
+
+    // let displayInputForDate = document.getElementById('startDate');
+    document.getElementById('startDate').setAttribute('type', 'datetime-local');
+    document.getElementById('endDate').setAttribute('type','datetime-local');
+
+  }
+
+  async function getEventById(clickedEvent) {
+
+    let returnEvent;
+
+    console.log("getEventById: clickedEvent id"  + clickedEvent.id);
+
+    let result = await fetch('/deleteBooking',{
+      method: 'POST',
+      body: JSON.stringify(clickedEvent),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (result.ok) {
+      returnEvent = await result.json();
+      return returnEvent;
+    }
+    else {
+      console.log("no permissions on this event");
+      return null;
+    }
+  }
+
+  function modalSaveAction(e) {
+    e.preventDefault();
+    myModal.hide();
+    addEvent();
+
+  }
+
+  async function modifyEvent(){
+    //event.preventDefault();
+
+    // console.log("modifyEvent: changing event with new data " + );
+
+    let resultOfModifiedEvent ;
+
+    let resultOfModifiedEventJson = await fetch("/updateBooking", {
+      method: 'POST',
+      body: JSON.stringify(modifiedEvent),
+      headers:{
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (resultOfModifiedEventJson.ok) {
+
+      resultOfModifiedEvent = await resultOfModifiedEventJson.json();
+
+    }
+    else {
+      throw new Error(`HTTP error! status: ${resultOfModifiedEventJson.status}`);
+    }
+
+    return resultOfModifiedEvent;
+  }
+
+  async function addEvent() {
+
+    event.preventDefault();
+
+    console.log("addEvent: adding new event with data " + newEvent.title + " " + newEvent.start + " " +newEvent.end);
+    let resultFromAddEventJson = await fetch("/newbooking",{
+      method: 'POST',
+      body: JSON.stringify(newEvent),
+      headers:{
+        'Content-Type': 'application/json'
+      }
+    });
+
+    let resultFromAddEvent = await resultFromAddEventJson.json();
+
+    return resultFromAddEvent;
+
+  }
+
+  async function addRecursionEvent(dateStartRecur,dateEndRecur) {
+
+    console.log("addEvent: adding new event with data " + newEvent.title + " " + newEvent.start + " " +newEvent.end);
+    let resultFromRecurAddJson = await fetch("/recurbooking/" + dateStartRecur+"/" + dateEndRecur,{
+      method: 'POST',
+      body: JSON.stringify(newEvent),
+      headers:{
+        'Content-Type': 'application/json'
+      }
+    });
+
+    let resultFromRecurAdd = await resultFromRecurAddJson.json();
+
+    return resultFromRecurAdd;
+  }
+
+  //trigger the recursion event
+  function toggleRecursionFields() {
+    const recursionCheckbox = document.getElementById("recursionCheckbox");
+    const recursionFields = document.getElementById("recursionFields");
+
+    // Show or hide the recursion fields based on checkbox state
+    recursionFields.style.display = recursionCheckbox.checked ? "block" : "none";
+  }
+
+  function editEvent(eventID,eventStartDate,eventEndDate) {
+
+    //very important what json clues are parsed, either on get or post
+    let clickedEvent = {
+      id: eventID,
+      start: eventStartDate,
+      end: eventEndDate
+    };
+
+
+    console.log("editEvent details");
+    console.log("editEvent: " + clickedEvent.id);
+    console.log("editEvent: " + clickedEvent.username);
+    console.log("editEvent: " + clickedEvent.start);
+    console.log("editEvent: " + clickedEvent.end);
+
+
+    getEventById(clickedEvent).then();
+
+    //δεν είναι λάθος,αλλά γίνεται σχεδόν ταυτόχρονα όλα
+    //location.reload();
+
+  }
+
+  function createModal(dateStartStr,timeStartStr,dateEndStr,timeEndStr) {
+
+    console.log("createModal: create modal with modalDate and time, labname,username");
+    myModal = new bootstrap.Modal(document.getElementById('exampleModal'));
+    var modalDateStart = document.getElementById('startDateFromCal').innerText = dateStartStr + "  at:" + timeStartStr;
+    var modalDateEnd = document.getElementById('endDateFromCal').textContent = dateEndStr + "  at:" + timeEndStr;
+    var modalLabname = document.getElementById('labname');
+    modalLabname.textContent = 'ΔΕΠΥ Β';
+
+    document.getElementById('labuser').textContent = whichLabUsername;
+  }
+
+  async function getAllBookings() {
+    const allBookings = await fetch("/allBookings",{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    let numRecsStr = await allBookings.text();
+    console.log("getAllBookings: number of records:" + numRecsStr);
+    let numRecs = Math.floor(numRecsStr);
+
+    newEvent = {
+      id: numRecs+1,
+      username: whichLabUser.textContent,
+      labname: 'ΔΕΠΥ Β',
+      start: dateStart,
+      end: dateEnd,
+      //   title: titleEvent
+    };
+
+  }
+
+
+  function loadCalendar() {
+
+    //location.reload();
+
+    //calendar.load('json_calendar.html #calendar');
+    calendar.render();
+    //location.reload();
+  }
+
+
+  async function getAllEvents() {
+    const eventsAll = await fetch(urlA,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    return await eventsAll.json();
+  }
+
+  //selectConstraint για να κλειδώνει μόνο μια μέρα
+  //selectOverlap για να μην γίνεται overlap του άλλου η κράτηση όχι όμως μεταξύ κρατήσεων του ίδιου χρήστη
+  //eventOverlap για να μην μπορεί να γίνει overlap μια κράτηση πάνω σε μια άλλη είτε είναι του ίδιου χρήστη
+  //  είτε είναι διαφορετικού
+
+  let calendarEl = document.getElementById('calendar');
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+
+    initialView: 'timeGridWeek',
+    selectable: true,
+    selectOverlap: false,
+    selectConstraint: {
+      start: '00:01',
+      end: '23:59',
+    },
+    eventDurationEditable: true,
+    businessHours: {
+      startTime: '08:00',
+      endTime: '20:00',
+    },
+    slotMinTime: "08:00",     // Earliest time displayed in the calendar
+    slotMaxTime: "20:00",
+
+//#378006
+    //#FFC107
+    events:
+            {
+              url: '/displayBookingsB',
+              type: 'GET',
+              color: '#FFC107',
+              textColor: 'black'
+            },
+    //events: [allEvents],
+    // red areas where no events can be dropped
+    eventOverlap: false,
+    // dateClick: function (info)
+    // {
+    //   alert("date clicked:"+info.dateStr);
+    //
+    // },
+    select: async function(info) {
+
+      let dateStartStr = info.startStr.split('T')[0];
+      let timeStartStr = info.startStr.split('T')[1].split('+')[0];
+
+      dateStart = dateStartStr +" " + timeStartStr;
+      console.log("date and time in string:" + dateStart);
+
+      let dateEndStr = info.endStr.split('T')[0];
+      let timeEndStr = info.endStr.split('T')[1].split('+')[0];
+
+      titleEvent = info.title;
+      dateEnd = dateEndStr + " " + timeEndStr;
+      console.log("date and time end in string:" + dateEnd);
+
+      createModal(dateStartStr,timeStartStr,dateEndStr,timeEndStr);
+
+      await  getAllBookings().then();
+      //newEvent.title = modalEventTitle.value.trim();
+      myModal.show();
+
+      var modalSaveChanges = document.getElementById('modalSave');
+
+      modalSaveChanges.addEventListener('click',async function (e) {
+        e.preventDefault();
+        var modalEventTitle = document.getElementById('eventTitle');
+        console.log('submit data from modal '+ modalSaveChanges.id);
+        console.log('title event ' + modalEventTitle.value.trim());
+        myModal.hide();
+        newEvent.title = "Event: " + modalEventTitle.value.trim() + " Υπεύθυνος: " + whichLabUsername;
+
+        if (document.getElementById("recursionCheckbox").checked) {
+
+          let dateStartRecur = document.getElementById("newStartDate").value;
+          let dateEndRecur = document.getElementById("newEndDate").value;
+          console.log("Recursion Start Date: " + dateStartRecur);
+          console.log("Recursion End Date: " + dateEndRecur);
+
+          let result = addRecursionEvent(dateStartRecur,dateEndRecur).then();
+          console.log("get result" + result.text);
+
+          if (!result) {
+            alert("there was a problem with adding this event");
+          }
+          else {
+            location.reload();
+          }
+
+          console.log("result from adding recursing Event "+ result);
+        }
+        else {
+          let result = await addEvent().then();
+          if (!result) {
+            alert("Try to reserve lab in reserved date");
+          }
+          else {
+
+            //this reload from database entry and displays event on calendar
+            location.reload();
+
+            //calendar.render();
+          }
+          console.log("result from adding Event "+ result);
+        }
+
+
+
+      },true);
+
+      console.log("event with: " + newEvent.id + " "+ newEvent.start +" "+ newEvent.end + " "+ newEvent.title);
+
+    },
+    eventChange: async function (info) {
+
+      console.log("eventChange: information for event to change: "+info.event.id + " " + info.event.title + " " + info.event.startStr);
+
+      dateStart = info.event.startStr.split('T')[0] + " " + info.event.startStr.split('T')[1].split('+')[0];
+
+      let dateEndStr = info.event.endStr.split('T')[0];
+      let timeEndStr = info.event.endStr.split('T')[1].split('+')[0];
+      dateEnd = dateEndStr + " " + timeEndStr;
+
+      modifiedEvent = {
+        id: info.event.id,
+        //username: whichLabUser.textContent,
+        labname: 'ΔΕΠΥ Β',
+        start: dateStart,
+        end: dateEnd
+        //   title: titleEvent
+      };
+
+      console.log("eventChange: change date " + dateEnd);
+
+      let result = await modifyEvent().then();
+      console.log("data of result: " + result.username + " " + result.id);
+      if (result.username !== whichLabUsername) {
+        alert("modification can't be done");
+        location.reload();
+      }
+      else {
+        alert("Time is changed!");
+        location.reload();
+      }
+    },
+    eventClick: function(eventClickInfo) {
+
+      let eventID = eventClickInfo.event.id;
+      let eventStartDate = eventClickInfo.event.startStr.split('T')[0] + " " + eventClickInfo.event.startStr.split('T')[1].split('+')[0];
+      let eventEndDate = eventClickInfo.event.endStr.split('T')[0] + " " + eventClickInfo.event.endStr.split('T')[1].split('+')[0];;
+
+      editDialog = $("#edit-dialog-form").dialog({
+        autoOpen: false,
+        height: 450,
+        width: 350,
+        modal: true,
+        buttons: {
+          Save: saveEvent(eventClickInfo.event),
+          Delete: async function () {
+
+            const eventToDelete = await fetch('bookingLab/' + eventID, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+
+            if (eventToDelete.ok) {
+              console.log("getting id of event is going to be deleted " );
+              let eventToDeleteJson = await eventToDelete.json();
+
+              console.log("eventToDelete username " + eventToDeleteJson.username);
+              console.log("eventToDelete id " + eventToDeleteJson.id);
+
+              console.log("eventToDelete logged user " + whichLabUsername);
+              if (eventToDeleteJson.username !== whichLabUsername) {
+                alert("dont have any permission");
+                location.reload();
+              }
+              else {
+                editEvent(eventID,eventStartDate,eventEndDate);
+                $(this).dialog("close");
+                location.reload();
+              }
+            }
+            else {
+              throw new Error(`HTTP error! status: ${eventToDelete.status}`);
+            }
+          },
+
+          Cancel: function () {
+            $(this).dialog("close");
+          }
+        },
+        close: function () {
+          $(this).dialog("close");
+        }
+      });
+
+      editDialog.attr("modtitle","test");
+
+      //editDialog.attr("modtitle",eventClickInfo.event.title);
+      console.log("event start date:" + eventClickInfo.event.startStr);
+
+
+      $("#modtitle").val(eventClickInfo.event.title);
+      $("#modstartdateandtime").val(eventClickInfo.event.start);
+      $("#modenddateandtime").val(eventClickInfo.event.end);
+      editDialog.dialog("open");
+    },
+
+    //this is for browser but can use it to delete the event on server side. The problem is in the authority.
+    //if the user isn't the owner of the event, then doesn't have the authority to proceed with the deletion
+    // eventClick: function(arg) {
+    //   console.log(arg);
+    //   if (confirm('Are you sure you want to delete this event?')) {
+    //     arg.event.remove()
+    //   }
+    // },
+
+    loading: function(bool) {
+      $('#loading').toggle(bool);
+    }
+
+  });
+
+
+
+  document.addEventListener('DOMContentLoaded',loadCalendar,true);
+
+  // window.addEventListener('load', function() {
+  //   setTimeout(function() {
+  //     var e = document.getElementsByClassName("btn-close")[0];
+  //     e.setAttribute('onclick', "myModal.close('btn-close');  location.reload();");
+  //   }, 1600);
+  // });
+</script>
+
+<div id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" class="modal fade" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Νέα Κράτηση Εργαστηρίου</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form autocomplete="off" action="">
+          <div class="form-group">
+            <h6>Κράτηση για: </h6>
+            <input id="eventTitle" type="text" autocomplete="nope" class="form-control" /><br>
+
+            <div>
+              <label for="startDateFromCal"><b>Έναρξη: </b></label>
+              <span id="startDateFromCal"></span>
+            </div>
+            <div>
+              <label for="endDateFromCal"><b>Λήξη: </b></label>
+              <span id="endDateFromCal"></span>
+            </div>
+            <div>
+              <label for="labname"><b>Εργαστήριο: </b></label>
+              <span id="labname"></span>
+            </div>
+            <div>
+              <label for="labuser"><b>Υπεύθυνος: </b></label>
+              <span id="labuser"></span>
+            </div>
+
+            <div class="form-check my-3">
+              <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="recursionCheckbox"
+                      onclick="toggleRecursionFields()"
+              />
+              <label class="form-check-label" for="recursionCheckbox">
+                Επανάληψη κράτησης
+              </label>
+            </div>
+
+            <!-- Recursion Fields -->
+            <div id="recursionFields" style="display: none;">
+              <div class="mb-3">
+                <label for="newStartDate"><b>Νέα Έναρξη: </b></label>
+                <input type="date" id="newStartDate" class="form-control" />
+              </div>
+              <div class="mb-3">
+                <label for="newEndDate"><b>Νέα Λήξη: </b></label>
+                <input type="date" id="newEndDate" class="form-control" />
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="modalClose" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" id="modalSave" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<div id="edit-dialog-form" title="Modify an Event" class="ui-helper-hidden">
+  <form id="edit-event-form">
+    <fieldset>
+      <label ><b>Title</b></label>&nbsp;&nbsp;
+      <input type="text" name="modtitle" id="modtitle" value="New Event" class="text ui-widget-content ui-corner-all"/><br><br>
+
+      <label for="modstartdateandtime"><b>Starts:</b></label>&nbsp;&nbsp;
+      <input type="text" id="modstartdateandtime"/>
+      <br></br>
+
+      <label for="modenddateandtime"><b>Ends:</b></label>&nbsp;&nbsp;
+      <input type="text" id="modenddateandtime"/>
+
+      <input type="hidden" name="moduid" id="moduid"/>
+      <input type="submit" tabindex="-1" style="position:absolute; top:-1000px"/>
+      <input type="submit" tabindex="-1" style="position:absolute; top:-1000px"/>
+    </fieldset>
+  </form>
+</div>
