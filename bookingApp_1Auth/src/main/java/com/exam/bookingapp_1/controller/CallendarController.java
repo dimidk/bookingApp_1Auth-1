@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 public class CallendarController {
 
     @Autowired
-    BookingLabService bookingLabService;
-    @Autowired
     private BusersService busersService;
 
 
@@ -39,7 +37,8 @@ public class CallendarController {
 
         busersService.save(busers);
 
-        return busers.getUsername();
+       // return busers.getUsername();
+        return "redirect:/login";
     }
 
 
@@ -62,57 +61,5 @@ public class CallendarController {
         return "logout";
     }
 
-    @GetMapping(value="/static_calendar")
-    public String static_calendar() {
-        return "static_calendar";
-    }
 
-
-    @GetMapping(value="/json_calendar")
-    public String json_calendar(@RequestParam String username) {
-
-
-        return "json_calendar";
-    }
-//
-//    @GetMapping(value="/validate-user")
-//    public String validation(HttpServletRequest request, HttpServletResponse response) {
-//
-//        String username = null;
-//        log.info("I am in validate-user");
-//
-//        String token = jwtUtils.getJwtFromHeader(request);
-//
-////        log.info("validate-user: token: {} ",token);
-//        if (token != null && jwtUtils.validateJwtToken(token) ) {
-//            log.info("token is valid!");
-//
-//            username = jwtUtils.getUserNameFromJwtToken(token);
-//
-//
-//            Cookie jwtCookie = new Cookie("JWT_TOKEN", token);
-//            jwtCookie.setHttpOnly(true);  // Prevent JavaScript access
-//            jwtCookie.setPath("/");
-//            response.addCookie(jwtCookie);
-//
-//
-//
-//        }
-//        log.info("username is " + username);
-//
-////
-////            //store to session
-////
-////            response.sendRedirect("json_calendar");
-////            return ResponseEntity.ok("{\"username\":\"" + username + "\"}");
-////        }
-//
-//        return "json_calendar";
-//
-//    }
-
-    @GetMapping(value="/jsonB_calendar")
-    public String jsonB_calendar() {
-        return "jsonB_calendar";
-    }
 }

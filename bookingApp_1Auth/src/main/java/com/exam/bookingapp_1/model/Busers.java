@@ -29,8 +29,8 @@ public class Busers implements UserDetails {
     private String username;
 
 
-    @Column(columnDefinition="password")
-    private String password;
+    @Column(columnDefinition="email")
+    private String email;
 
 //
 //    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
@@ -41,10 +41,18 @@ public class Busers implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(name="fullname")
+    private String fullname;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        //return this.email;
+        return "";
     }
 //    private Set<Brole> roles;
 

@@ -78,10 +78,22 @@ public class BusersService {
 
         Busers newUser = Busers.builder()
                 .username(username)
-                .password(busers.getPassword())
+                .email(busers.getEmail())
                 .role(Role.USER)
+                .fullname(busers.getFullname())
                 .build();
 
         busersRepository.save(newUser);
+    }
+
+
+    public Busers getUserEmail(String username) {
+
+        return busersRepository.findBusersByUsername(username).get();
+    }
+
+    List<Busers> allUsers() {
+
+        return busersRepository.findAll();
     }
 }

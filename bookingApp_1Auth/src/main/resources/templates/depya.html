@@ -163,22 +163,6 @@
     });
 
   }
-  function removeEvent(event) {
-
-    let clickedEvent = {
-      id: event.id,
-      start: event.start,
-      end: event.end
-    };
-
-    getEventById(clickedEvent).then((returnedEvent) => {
-      if (returnedEvent) {
-
-      }
-
-    });
-
-  }
 
   function showInputButtons() {
 
@@ -277,7 +261,8 @@
       }
     });
 
-    let resultFromRecurAdd = await resultFromRecurAddJson.json();
+    let resultFromRecurAdd =  resultFromRecurAddJson.status;
+    console.log("addRecursionEvent: return from fetch " + resultFromRecurAdd);
 
     return resultFromRecurAdd;
   }
@@ -289,6 +274,36 @@
 
     // Show or hide the recursion fields based on checkbox state
     recursionFields.style.display = recursionCheckbox.checked ? "block" : "none";
+  }
+
+  function toggleRecursionDeletionFields() {
+    const recursionDeletionCheckbox = document.getElementById("recursionDeletionCheckbox");
+    const recursionDeletionFields = document.getElementById("recursionDeletionFields");
+
+    // Show or hide the recursion fields based on checkbox state
+    recursionDeletionFields.style.display = recursionDeletionCheckbox.checked ? "block" : "none";
+  }
+
+  async function deleteRecurEvents(deleteStartDate,deleteEndDate,eventID) {
+
+    let firstEvent = {
+      id: eventID
+    };
+
+    console.log("deleteRecurEvents: start date to delete: " + deleteStartDate);
+
+    let deletion = await fetch("/recurDeleteBooking/" + deleteStartDate + "/" + deleteEndDate, {
+      method: 'POST',
+      body: JSON.stringify(firstEvent),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    let deletionResult = await deletion.json();
+    console.log("deleteRecurEvents: " + deletionResult.id);
+
+    return deletionResult;
   }
 
   function editEvent(eventID,eventStartDate,eventEndDate) {
@@ -352,9 +367,6 @@
 
   function loadCalendar() {
 
-    //location.reload();
-
-    //calendar.load('json_calendar.html #calendar');
     calendar.render();
     //location.reload();
   }
@@ -405,11 +417,6 @@
     //events: [allEvents],
     // red areas where no events can be dropped
     eventOverlap: false,
-    // dateClick: function (info)
-    // {
-    //   alert("date clicked:"+info.dateStr);
-    //
-    // },
     select: async function(info) {
 
       let dateStartStr = info.startStr.split('T')[0];
@@ -448,11 +455,10 @@
           console.log("Recursion Start Date: " + dateStartRecur);
           console.log("Recursion End Date: " + dateEndRecur);
 
-          let result = addRecursionEvent(dateStartRecur,dateEndRecur).then();
-          console.log("get result" + result.text);
-
-          if (!result) {
-            alert("there was a problem with adding this event");
+          let result = await addRecursionEvent(dateStartRecur,dateEndRecur).then();
+          console.log("HttpStatus from recurring booking ",result);
+          if (result !== 200) {
+            alert("Your selections are overlapping other reservations");
           }
           else {
             location.reload();
@@ -463,19 +469,17 @@
         else {
           let result = await addEvent().then();
           if (!result) {
-            alert("Try to reserve lab in reserved date");
+            alert("Your selection tries to reserve lab in reserved date");
           }
           else {
 
             //this reload from database entry and displays event on calendar
             location.reload();
 
-            //calendar.render();
           }
+
           console.log("result from adding Event "+ result);
         }
-
-
 
       },true);
 
@@ -526,8 +530,10 @@
         width: 350,
         modal: true,
         buttons: {
-          Save: saveEvent(eventClickInfo.event),
+          //Save: saveEvent(eventClickInfo.event),
           Delete: async function () {
+
+            let deleteRecur = document.getElementById("recursionDeletionCheckbox");
 
             const eventToDelete = await fetch('bookingLab/' + eventID, {
               method: 'GET',
@@ -537,7 +543,7 @@
             });
 
             if (eventToDelete.ok) {
-              console.log("getting id of event is going to be deleted " );
+              console.log("getting id of event is going to be deleted ");
               let eventToDeleteJson = await eventToDelete.json();
 
               console.log("eventToDelete username " + eventToDeleteJson.username);
@@ -547,18 +553,35 @@
               if (eventToDeleteJson.username !== whichLabUsername) {
                 alert("dont have any permission");
                 location.reload();
+              } else {
+
+                if (deleteRecur.checked) {
+
+                  let deleteStartDate = document.getElementById("deletionStartDate").value;
+                  let deleteEndDate = document.getElementById("deletionEndDate").value;
+                  console.log("delete all repeated events on start date:" + deleteStartDate);
+                  console.log("delete all repeated events on end date:" + deleteEndDate);
+
+                  let result = deleteRecurEvents(deleteStartDate,deleteEndDate,eventID).then();
+                  if (result) {
+                    console.log("everything deleted!");
+                    $(this).dialog("close");
+                    location.reload();
+
+                  } else {
+                    throw new Error("Problem with deletion!");
+                  }
+                }
+                else {
+                  editEvent(eventID, eventStartDate, eventEndDate);
+                  $(this).dialog("close");
+                  location.reload();
+                }
               }
-              else {
-                editEvent(eventID,eventStartDate,eventEndDate);
-                $(this).dialog("close");
-                location.reload();
-              }
-            }
-            else {
+            } else {
               throw new Error(`HTTP error! status: ${eventToDelete.status}`);
             }
           },
-
           Cancel: function () {
             $(this).dialog("close");
           }
@@ -675,18 +698,42 @@
 
 
 
-<div id="edit-dialog-form" title="Modify an Event" class="ui-helper-hidden">
+<div id="edit-dialog-form" title="Λεπτομέρειες Κράτησης" class="ui-helper-hidden">
   <form id="edit-event-form">
     <fieldset>
-      <label ><b>Title</b></label>&nbsp;&nbsp;
-      <input type="text" name="modtitle" id="modtitle" value="New Event" class="text ui-widget-content ui-corner-all"/><br><br>
+      <label ><b>Λόγος Κράτησης: </b></label>&nbsp;&nbsp;
+      <input type="text"  name="modtitle" id="modtitle" value="New Event" class="text ui-widget-content ui-corner-all"/><br><br>
 
-      <label for="modstartdateandtime"><b>Starts:</b></label>&nbsp;&nbsp;
+      <label for="modstartdateandtime"><b>Έναρξη:</b></label>&nbsp;&nbsp;
       <input type="text" id="modstartdateandtime"/>
       <br></br>
 
-      <label for="modenddateandtime"><b>Ends:</b></label>&nbsp;&nbsp;
+      <label for="modenddateandtime"><b>Λήξη:</b></label>&nbsp;&nbsp;
       <input type="text" id="modenddateandtime"/>
+
+      <div class="form-check my-3">
+        <input
+                class="form-check-input"
+                type="checkbox"
+                id="recursionDeletionCheckbox"
+                onclick="toggleRecursionDeletionFields()"
+        />
+        <label class="form-check-label" for="recursionCheckbox">
+          Διαγραφή επαναλαμβανόμενης κράτησης
+        </label>
+      </div>
+
+      <!-- Recursion Fields -->
+      <div id="recursionDeletionFields" style="display: none;">
+        <div class="mb-3">
+          <label for="deletionStartDate"><b>Νέα Έναρξη: </b></label>
+          <input type="date" id="deletionStartDate" class="form-control" />
+        </div>
+        <div class="mb-3">
+          <label for="deletionEndDate"><b>Νέα Λήξη: </b></label>
+          <input type="date" id="deletionEndDate" class="form-control" />
+        </div>
+      </div>
 
       <input type="hidden" name="moduid" id="moduid"/>
       <input type="submit" tabindex="-1" style="position:absolute; top:-1000px"/>

@@ -17,22 +17,21 @@ public interface BookingLabRepository extends JpaRepository <BookingLab, Integer
 
 
     List<BookingLab> findAll();
-//    BookingLab getLastBookingLab();
 
     boolean existsById(int id);
-    List<BookingLab> getBookingLabsByLabname(String labname);
 
-    //@Query("update b.end from BookingLab b where b.id = ?")
-    //BookingLab updateBookingLabById(int id, BookingLab bookingLab);
+    List<BookingLab> getBookingLabsByLabname(String labname);
 
     Optional<BookingLab> getBookingLabById(int id);
 
     boolean existsBookingLabByLabnameAndStartBetween(String labname, LocalDateTime startTime, LocalDateTime endTime);
 
-    boolean existsBookingLabByLabnameAndStartBetweenAndEndBefore(String labname, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime endTime2);
-    boolean existsBookingLabByLabnameAndEndBetween(String labname, LocalDateTime startTime, LocalDateTime endTime);
-
     @Query("select max(b.id) from BookingLab b")
     int findTopIdBookingLab();
 
+    @Override
+    void deleteAllById(Iterable<? extends Integer> integers);
+
+    List<BookingLab> getAllByLabnameAndStartBetween(String labname, LocalDateTime startTime, LocalDateTime endTime);
+    List<BookingLab> getAllByLabnameAndEndBetween(String labname, LocalDateTime startTime, LocalDateTime endTime);
 }
