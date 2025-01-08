@@ -125,7 +125,6 @@ public class MyAuthenticationHandler implements AuthenticationSuccessHandler {
         //roleTargetUrlMap.put("USER", "/json_calendar?username=" + authentication.getName());
         //roleTargetUrlMap.put("USER","/depyb?username=" + authentication.getName()) ;
         roleTargetUrlMap.put("USER","/depya?username=" + authentication.getName()) ;
-        //roleTargetUrlMap.put("USER","/depyc?username=" + authentication.getName()) ;
 
         //roleTargetUrlMap.put("USER","/auth");
         roleTargetUrlMap.put("ADMIN", "/index");

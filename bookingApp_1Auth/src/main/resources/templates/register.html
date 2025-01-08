@@ -81,17 +81,17 @@
       <input type="text" id="username" name="username" placeholder="Enter your username" required>
     </div>
     <div class="form-group">
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" placeholder="Enter your password" required>
+      <label for="email">Edu Email</label>
+      <input type="text" id="email" name="email" placeholder="Enter your edu email" required onchange="checkingEmail()">
     </div>
     <div class="form-group">
-      <label for="lastname">Last Name</label>
-      <input type="text" id="lastname" name="lastname" placeholder="Enter your Last Name" required>
+      <label for="fullname">Full Name</label>
+      <input type="text" id="fullname" name="fullname" placeholder="Enter your Full Name" required>
     </div>
-    <div class="form-group">
-      <label for="firstname">First Name</label>
-      <input type="text" id="firstname" name="firstname" placeholder="Enter your First Name" required>
-    </div>
+<!--    <div class="form-group">-->
+<!--      <label for="firstname">First Name</label>-->
+<!--      <input type="text" id="firstname" name="firstname" placeholder="Enter your First Name" required>-->
+<!--    </div>-->
     <div class="form-group">
       <button type="submit">Register</button>
     </div>
@@ -103,5 +103,25 @@
     <p>You have been logged out successfully.</p>
   </div>
 </div>
+
 </body>
+
+
+
 </html>
+
+
+<script>
+
+  function checkingEmail() {
+
+    let strEmail = email.value;
+    console.log("this is the email " + strEmail);
+    if (!strEmail.toString().split("@")[1].includes('mail.ntua.gr')) {
+      alert("this email is not accepted! Give your edu email for example user@mail.ntua.gr")
+      email.value="";
+    }
+
+  }
+
+</script>

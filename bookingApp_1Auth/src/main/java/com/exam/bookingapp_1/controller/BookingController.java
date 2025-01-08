@@ -1,8 +1,13 @@
 package com.exam.bookingapp_1.controller;
 
 import com.exam.bookingapp_1.model.BookingLab;
+import com.exam.bookingapp_1.model.Busers;
 import com.exam.bookingapp_1.repository.BookingLabRepository;
 import com.exam.bookingapp_1.service.BookingLabService;
+import com.exam.bookingapp_1.model.ReservedSlots;
+import com.exam.bookingapp_1.service.BusersService;
+import com.exam.bookingapp_1.service.ReservedSlotsService;
+import com.exam.bookingapp_1.service.SendEmailService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,16 +19,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 
-import javax.swing.text.html.Option;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.io.UnsupportedEncodingException;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import javax.mail.MessagingException;
 
-//@Controller("/auth")
+
 @Controller
 @AllArgsConstructor
 @Slf4j
@@ -33,45 +38,24 @@ public class BookingController {
     private BookingLabService bookingLabService;
     @Autowired
     private BookingLabRepository bookingLabRepository;
+    @Autowired
+    private ReservedSlotsService reservedSlotsService;
 
-    //display bookings for all labs
-//    @RequestMapping(value = "/displayBookingsA", method = RequestMethod.GET)
-//    public ResponseEntity<List<BookingLab>> getAllBookingsA() throws IOException {
-//
-//        List<BookingLab> allBookings = new ArrayList<>();
-//        String labname = "ΔΕΠΥ Α";
-//
-//        allBookings = bookingLabService.getByLabname(labname);
-//
-//        return ResponseEntity.ok(allBookings);
-//
-//    }
-//
-//    @RequestMapping(value = "/displayBookingsB", method = RequestMethod.GET)
-//    public ResponseEntity<List<BookingLab>> getAllBookingsB() throws IOException {
-//
-//        List<BookingLab> allBookings = new ArrayList<>();
-//        String labname = "ΔΕΠΥ Β";
-//
-//        allBookings = bookingLabService.getByLabname(labname);
-//
-//        return ResponseEntity.ok(allBookings);
-//
-//    }
-//
-//
-//    @RequestMapping(value = "/displayBookingsC", method = RequestMethod.GET)
-//    public ResponseEntity<List<BookingLab>> getAllBookingsC() throws IOException {
-//
-//        List<BookingLab> allBookings = new ArrayList<>();
-//        String labname = "ΔΕΠΥ Γ";
-//
-//        allBookings = bookingLabService.getByLabname(labname);
-//
-//        return ResponseEntity.ok(allBookings);
-//
-//    }
+    @Autowired
+    private SendEmailService sendEmailService;
 
+    private final BusersService busersService;
+
+
+    /***
+     *Create a list with reserved dates in order to avoid overlap when batch reservation is
+     * made by a user.
+     *
+     * But there is an error that the first date that is free is reserved but the others reserverd
+     * are not re-reserved
+     *
+     * @return
+     */
 
     @GetMapping("/allBookings")
     public ResponseEntity<String> getAllBookingsCount() {
@@ -84,17 +68,11 @@ public class BookingController {
 
     }
 
-    private boolean bookingLabOnReservedDate(BookingLab bookingLab) {
+    private boolean bookingLabOnReservedDate(String labname) {
 
-//        if (bookingLabService.existsBookingLab(bookingLab.getId())
-//                || bookingLabService.dateBookingLab(bookingLab)) {
-//            return true;
-//        }
-        if (bookingLabService.dateBookingLab(bookingLab)) {
-            return true;
-        }
 
-        return false;
+    return true;
+
 
     }
 
@@ -102,12 +80,6 @@ public class BookingController {
     //display all bookings for specific lab
     @GetMapping("/displayBookingInfo/{labName}")
     public List<BookingLab> getBookingLab(@PathVariable String labName) {
-
-   //     List<BookingLab> bookingLab = bookingLabRepository.findByBTitle(labName);
-
-//        List<BookingLab> bookingLab = bookingLabService.findBookingLabByName(labName);
-
-
 
         return bookingLabService.findBookingLabByName(labName);
     }
@@ -148,11 +120,16 @@ public class BookingController {
         log.info("new event information {} {} {} {} {} {} ",bookingLab.getId(),bookingLab.getTitle(),bookingLab.getUsername(),bookingLab.getStart(), bookingLab.getEnd(),bookingLab.getLabname());
 
         log.info("end time presentation {}" ,bookingLab.getEnd());
-        if (bookingLabOnReservedDate(bookingLab)) {
-
-            log.info("booking lab {} already exists or trying to book on reserved date {} ", bookingLab.getId(), bookingLab.getStart());
-        }
-        else {
+//        if (bookingLabOnReservedDate(bookingLab.getLabname())) {
+//
+//            log.info("booking lab {} already exists or trying to book on reserved date {} ", bookingLab.getId(), bookingLab.getStart());
+//        }
+//        else {
+        ReservedSlots newResSlots = ReservedSlots.builder()
+                .labname(bookingLab.getLabname())
+                .end(bookingLab.getEnd())
+                .start(bookingLab.getStart())
+                .build();
 
             newEvent = BookingLab.builder()
                     .id(bookingLab.getId())
@@ -165,42 +142,193 @@ public class BookingController {
 
             log.info("logging the new Event {} {} {} {} {} {} :",newEvent.getId(),newEvent.getTitle(),newEvent.getStart(),newEvent.getEnd(),newEvent.getUsername(),newEvent.getLabname());
             bookingLabService.add(newEvent);
+            reservedSlotsService.add(newResSlots);
+
+            ReservedSlots check = new ReservedSlots();
+            check.setStart(LocalDateTime.of(2024,12,5,13,30));
+            check.setEnd(LocalDateTime.of(2024,12,5,14,30));
+            log.info("checking reserved slot {}:",newResSlots.overlaps(check));
+
             //bookingLabService.add(bookingLab);
-        }
+       // }
 
         return ResponseEntity.ok(Optional.ofNullable(newEvent));
     }
 
-    private void addingRepeatingEvents(BookingLab bookingLab,int times) {
+
+//    private List<LocalDateTime> reservedDatesEnd(String labname, LocalDateTime start, LocalDateTime end) {
+//
+//        List<BookingLab> bookings = new ArrayList<>();
+//
+//        bookings = bookingLabService.getBookingLabsByLabnameAndDateEnd(labname,start,end);
+//        log.info("booking dates ending from db between start and end {}",bookings.stream().map(BookingLab::getEnd).toList());
+//
+//        List<LocalDateTime> dates = bookings.stream().map(BookingLab::getEnd).collect(Collectors.toList());
+//        return dates;
+//    }
+
+//    private boolean findOverlapDateTime(BookingLab bookingLab,int times) {
+//
+//        int id = bookingLab.getId();
+//        LocalDateTime startTime = bookingLab.getStart();
+//        LocalDateTime endTime = bookingLab.getEnd();
+//        log.info("findReservedDates: addingRepeating endTime date {}",endTime);
+//
+//        List<LocalDateTime> datesStart = reservedDatesStart(bookingLab.getLabname(),startTime,startTime.plusWeeks(times));
+//        log.info("find dates from db where start between start and times {}",datesStart.stream().toList());
+//
+//
+////        datesStart.forEach(date -> {if (date.isBefore(endTime.plusWeeks(1))) {datesStart.remove(date);}});
+//
+//        List<LocalDateTime> createEndTime = IntStream.range(0,times+1)
+//                .mapToObj(weeks -> endTime.plusWeeks(weeks))
+//                .collect(Collectors.toList());
+//
+//        createEndTime.forEach(date -> log.info("endTime for repeated event {}",String.valueOf(date)));
+//
+//        List<Long> createEndTimeToMinutes = createEndTime.stream()
+//                .mapToLong(date -> date.toEpochSecond(ZoneOffset.UTC))
+//                .boxed()
+//                .collect(Collectors.toList());
+//
+//        List<Long> datesStartToMinutes = datesStart.stream()
+//                .mapToLong(date -> date.toEpochSecond(ZoneOffset.UTC))
+//                .boxed()
+//                .collect(Collectors.toList());
+//
+//        List<Long> leftDates = createEndTimeToMinutes.stream().flatMap(num -> datesStartToMinutes.stream().filter(d -> d.compareTo(num) > 0 ))
+//                .collect(Collectors.toList());
+//
+//        List<LocalDateTime> leftDatesCorrect = leftDates.stream().map(d -> Instant.ofEpochSecond(d)
+//                .atZone(ZoneId.of("UTC"))
+//                .toLocalDateTime()
+//                ).collect(Collectors.toList());
+//
+//        leftDatesCorrect.forEach(date -> log.info("converted date {}",String.valueOf(date)));
+//
+////       Set<LocalDateTime> leftDates = createEndTime.stream().flatMap(date ->
+////               datesStart.stream().filter(d ->  date.isEqual(d) || date.isAfter(d))).collect(Collectors.toSet());
+//
+//
+//
+//        //ελέγχει ότι το date  είναι μεταγενέστερη του d
+////        Set<LocalDateTime> leftDates = datesStart.stream()
+////                .flatMap((date) -> createEndTime.stream().filter(d ->
+////                date.isEqual(d) || date.isAfter(d))).collect(Collectors.toSet());
+//
+//
+//
+////        List<LocalDate> leftDates = datesStart.stream().map(LocalDateTime::toLocalDate).flatMap(date ->
+////                createEndTime.stream().map(LocalDateTime::toLocalDate).filter(d -> d.equals(date) || d.isAfter(date)))
+////                .collect(Collectors.toList());
+//        //leftDates.forEach(date -> log.info("date that is left {}",String.valueOf(date)));
+//
+//
+//        if (leftDatesCorrect.size() <= createEndTime.size()) {
+//            return false;
+//        }
+//
+//        return true;
+//    }
+
+
+    public boolean canReserve(List<ReservedSlots> resSlots,ReservedSlots newResSlot) {
+
+        boolean a = false;
+        a = resSlots.stream().noneMatch(existing -> {
+
+            log.info("{} {} {}:",existing.overlaps(newResSlot),existing.getStart(),existing.getEnd());
+            log.info("{} {} {}:",newResSlot.overlaps(existing),newResSlot.getStart(),newResSlot.getEnd());
+            return existing.overlaps(newResSlot) || newResSlot.overlaps(existing);
+        }
+        );
+
+
+
+        //return resSlots.stream().noneMatch(existing -> existing.overlaps(newResSlot) || newResSlot.overlaps(existing));
+        return a;
+    }
+
+
+    private boolean addingRepeatingEvents(BookingLab bookingLab,int times) {
 
         BookingLab newEvent = null;
+        ReservedSlots  resSlots = new ReservedSlots();
+
         int id = bookingLab.getId();
         LocalDateTime startTime = bookingLab.getStart();
         LocalDateTime endTime = bookingLab.getEnd();
+        log.info("addingRepeating endTime date {}",endTime);
 
-        for (int i = 0; i <= times; i++) {
+        //problem with the query
+        List<ReservedSlots> reservedSlotsList = reservedSlotsService.getAllLabReservedSlots(bookingLab.getLabname());
+        reservedSlotsList.stream().forEach(reservedSlots -> log.info("query result: start date :{}",reservedSlots.getStart()));
+
+       // List<LocalDateTime> datesStart = reservedDatesStart(bookingLab.getLabname(),startTime,startTime.plusWeeks(times));
+
+        List<ReservedSlots> newReserved = IntStream.range(0,times+1)
+                .mapToObj(i -> {
+
+                    return ReservedSlots.builder()
+                            .build();
+                        })
+                .collect(Collectors.toList());
+        int i=0;
+        LocalDateTime start = startTime;
+        LocalDateTime end = endTime;
+        for(ReservedSlots reservedSlot : newReserved) {
+
+            reservedSlot.setStart(start.plusWeeks(i));
+            reservedSlot.setEnd(end.plusWeeks(i));
+            i++;
+
+        }
+
+        newReserved.stream().forEach(resslot -> log.info("new reservation date {} {}",resslot.getStart(),resslot.getEnd()));
+        //canReserveSlots(reservedSlotsList,newReserved);
+//        if (!canReserveSlots(reservedSlotsList,newReserved)) {
+//            return false;
+//        }
+        List<BookingLab> addBookings = new ArrayList<>();
+        List<ReservedSlots> addReservedSlots = new ArrayList<>();
+        List<Boolean> canReserved = new ArrayList<>();
+
+        for ( i = 0; i <= times; i++) {
 
             newEvent = BookingLab.builder()
-                    .id(id)
+                    .id(id+i)
                     .title(bookingLab.getTitle())
-                    .start(startTime)
-                    .end(endTime)
+                    .start(startTime.plusWeeks(i))
+                    .end(endTime.plusWeeks(i))
                     .username(bookingLab.getUsername())
                     .labname(bookingLab.getLabname())
                     .build();
 
-            bookingLabService.add(newEvent);
+            ReservedSlots newResSlot = ReservedSlots.builder()
+                    .start(startTime.plusWeeks(i))
+                    .end(endTime.plusWeeks(i))
+                    .labname(bookingLab.getLabname())
+                    .build();
+            addBookings.add(newEvent);
+            addReservedSlots.add(newResSlot);
 
-            id++;
-            startTime = startTime.plusWeeks(1);
-            endTime = endTime.plusWeeks(1);
-
+            canReserved.add(canReserve(reservedSlotsList,newResSlot));
+            log.info("can reserve check new slot: {} {}",canReserve(reservedSlotsList,newResSlot),
+                    newResSlot.getStart());
         }
+        int countFalse = Math.toIntExact(canReserved.stream().filter(value -> !value).count());
+        if (countFalse > 0) {
+            log.info("No possibility to reserve lab on these dates");
+            return false;
+        }
+        bookingLabService.addAll(addBookings);
+        reservedSlotsService.addAll(addReservedSlots);
 
+        return true;
     }
 
     @PostMapping("/recurbooking/{dateStart}/{dateEnd}")
-    public ResponseEntity<HttpStatus> saveRecurBooking(@RequestBody  BookingLab bookingLab, @PathVariable String dateStart, @PathVariable String dateEnd, Locale locale) {
+    public ResponseEntity<HttpStatus> saveRecurBooking(@RequestBody  BookingLab bookingLab, @PathVariable String dateStart, @PathVariable String dateEnd) {
 
         Optional<String> response = null;
         BookingLab newEvent = null;
@@ -218,18 +346,11 @@ public class BookingController {
         log.info("new event information {} {} {} {} {} {} ",bookingLab.getId(),bookingLab.getTitle(),bookingLab.getUsername(),bookingLab.getStart(),
                 bookingLab.getEnd(),bookingLab.getLabname());
         log.info("add a recursing event same time from date {} to {}", dateStart, dateEnd);
+        long numberOfWeeks = ChronoUnit.WEEKS.between(LocalDate.parse(dateStart), LocalDate.parse(dateEnd));
+        log.info("number of weeks to reserve the event: {}", numberOfWeeks);
 
-        if (bookingLabOnReservedDate(bookingLab)) {
-
-            log.info("booking lab {} already exists or trying to book on reserved date {} ", bookingLab.getId(), bookingLab.getStart());
-        }
-        else {
-
-            long numberOfWeeks = ChronoUnit.WEEKS.between(LocalDate.parse(dateStart), LocalDate.parse(dateEnd));
-            log.info("number of weeks to reserve the event: {}", numberOfWeeks);
-
-            addingRepeatingEvents(bookingLab,Integer.parseInt(Long.toString(numberOfWeeks)));
-
+        if (!addingRepeatingEvents(bookingLab,Integer.parseInt(Long.toString(numberOfWeeks)))) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(HttpStatus.CONFLICT);
         }
 
         return ResponseEntity.ok(HttpStatus.OK);
@@ -246,10 +367,11 @@ public class BookingController {
     }
 
     @PostMapping("/deleteBooking")
-    public ResponseEntity<BookingLab> deleteBooking(@RequestBody BookingLab bookingLab) {
+    public ResponseEntity<BookingLab> deleteBooking(@RequestBody BookingLab bookingLab) throws MessagingException {
 
         Optional<BookingLab> recordDeleted = null;
         BookingLab notFound = null;
+        ReservedSlots resSlot = null;
 
         log.info("event to delete: {} {} {} ",bookingLab.getId(),bookingLab.getTitle(),bookingLab.getStart());
 
@@ -272,8 +394,99 @@ public class BookingController {
         else {
 
            boolean a = bookingLabService.deleteBookingLab(bookingLab.getId());
+           resSlot = ReservedSlots.builder()
+                   .labname(bookingLab.getLabname())
+                   .start(bookingLab.getStart())
+                   .end(bookingLab.getEnd())
+                   .build();
+           reservedSlotsService.deleteReservedSlots(resSlot);
+
+           HashMap<String,String> params = prepareEmailParams();
+//           sendEmail.emailParams(params);
+            sendEmailService.sendNewMail(params.get("To"), params.get("Subject"), params.get("Body"));
         }
         return ResponseEntity.of(recordDeleted);
+
+    }
+
+    private List<ReservedSlots> findResSlotsToDelete(BookingLab bookingLab,int times) {
+
+
+        List<Integer> ids = IntStream.range(bookingLab.getId(),bookingLab.getId()+times+1)
+                .boxed().toList();
+
+        List<ReservedSlots> resSlotsList = reservedSlotsService.getReservedSlotsBetween(bookingLab.getLabname(),bookingLab.getStart(),bookingLab.getStart().plusWeeks(times+1));
+        resSlotsList.stream().forEach(res -> log.info("record for deletion:{} {} {}",res.getLabname(),res.getStart(),res.getEnd()));
+
+        List<LocalDateTime> bookings = ids.stream().map(i -> bookingLabService.getBookingLabById(i)
+                .map(d -> d.getStart()).orElseThrow()).toList();
+        List<ReservedSlots> finalForDeletion = resSlotsList.stream().filter(date -> bookings.stream().anyMatch(b -> b.isEqual(date.getStart())))
+                .collect(Collectors.toList());
+
+        //if finalForDeletion is Empty proceeds with the deletion of bookings
+        finalForDeletion.stream().forEach(res -> log.info("delete the record:{} {} {}",res.getLabname(),res.getStart(),res.getEnd()));
+
+        return finalForDeletion;
+    }
+
+    private HashMap<String,String> prepareEmailParams() {
+
+        HashMap<String,String> params = new HashMap<>();
+
+
+        Busers user = busersService.getUserEmail(getAuthenticationUsername());
+        String to  = user.getEmail();
+        //String to = "dekadimi@mail.ntua.gr";
+        params.put("To",to);
+
+        String subject = "Days and Times of reservation Lab changed!";
+        params.put("Subject",subject);
+
+        String body = "Dear user " + getAuthenticationUsername() + ",\n\n";
+        body = body + "Τα διατμηματικά εργαστήρια είναι ελεύθερα για κάποιες μέρες και ώρες μετά από ακυρώσεις.  \n";
+        body = body + "Παρακαλώ ελέγξτε την περίπτωση αν επιθυμείτε να κάνετε κράτηση αυτές τις μέρες.  \n\n";
+        body = body + "Με εκτίμηση \n\n" + "Central of National Technical University of Athens";
+
+        params.put("Body",body);
+        return params;
+    }
+
+    @PostMapping("/recurDeleteBooking/{startDate}/{endDate}")
+//    public ResponseEntity<BookingLab> recurDeleteBooking(@RequestBody BookingLab bookingLab,@PathVariable String startDate,@PathVariable String endDate) {
+    public ResponseEntity<HttpStatus> recurDeleteBooking(@RequestBody BookingLab bookingLab,@PathVariable String startDate,@PathVariable String endDate) {
+
+        Optional<BookingLab> recordDeleted = null;
+        BookingLab notFound = null;
+        List<ReservedSlots> resSlotsList = null;
+
+        recordDeleted = bookingLabService.getBookingLabById(bookingLab.getId());
+        if (recordDeleted.isEmpty()) {
+            throw new RuntimeException("there is no such a booking event");
+        }
+        String username = getAuthenticationUsername();
+        long numberOfWeeks = ChronoUnit.WEEKS.between(LocalDate.parse(startDate), LocalDate.parse(endDate));
+        int weeksNum = Integer.parseInt(Long.toString(numberOfWeeks));
+
+        log.info("number of weeks to delete the event {} for user  {}", numberOfWeeks, username);
+
+        if (!username.equals(recordDeleted.get().getUsername())) {
+            log.info("You are not authorized to delete this event");
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        else {
+            //get all events from id to id+numberOfWeeks and delete them instead of the loop
+            List<Integer> ids = IntStream.range(bookingLab.getId(),bookingLab.getId()+weeksNum+1)
+                    .boxed().toList();
+
+            reservedSlotsService.deleteReservedSlots(findResSlotsToDelete(recordDeleted.get(),weeksNum));
+            //bookingLabRepository.deleteAllById(ids);
+            bookingLabService.deleteRecurBookingLab(ids);
+//            HashMap<String,String> params = prepareEmailParams();
+//            sendEmail.emailParams(params);
+        }
+
+        return  ResponseEntity.status(HttpStatus.OK).build();
 
     }
 

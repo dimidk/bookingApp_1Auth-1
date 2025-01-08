@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,9 +25,10 @@ public class BookingLabService {
         bookingLabRepository.save(bookingLab);
     }
 
-    public long countAll() {
-        return bookingLabRepository.count();
+    public void addAll(List<BookingLab> bookingLabs) {
+        bookingLabRepository.saveAll(bookingLabs);
     }
+
 
     public List<BookingLab> getAll() {
         return bookingLabRepository.findAll();
@@ -40,10 +42,6 @@ public class BookingLabService {
         return bookingLabRepository.findTopIdBookingLab();
     }
 
-    public boolean existsBookingLab(int id) {
-        return bookingLabRepository.existsById(id);
-    }
-
     public List<BookingLab> findBookingLabByName(String title) {
 
         return bookingLabRepository.getBookingLabsByLabname(title);
@@ -53,6 +51,15 @@ public class BookingLabService {
 
         bookingLabRepository.deleteById(id);
         return true;
+    }
+
+
+    public boolean deleteRecurBookingLab(List<Integer> ids) {
+
+        bookingLabRepository.deleteAllById(ids);
+
+        return true;
+
     }
 
     public Optional<BookingLab> updateBookingLab(BookingLab bookingLab) {
@@ -94,6 +101,16 @@ public class BookingLabService {
 
     }
 
+    public List<BookingLab> getBookingLabsByLabnameAndDateStart(String labname, LocalDateTime startDate, LocalDateTime endDate) {
+
+        return bookingLabRepository.getAllByLabnameAndStartBetween(labname, startDate, endDate);
+    }
+
+    public List<BookingLab> getBookingLabsByLabnameAndDateEnd(String labname, LocalDateTime startDate, LocalDateTime endDate) {
+
+        return bookingLabRepository.getAllByLabnameAndEndBetween(labname, startDate, endDate);
+    }
+
     public List<BookingLab> getBookingLabsName(List<BookingLab> bookingLabs, String labname) {
 
         List<BookingLab> bookingLabsList = bookingLabs.stream().filter(bookingLab -> bookingLab.getLabname().compareTo(labname) == 0)
@@ -105,8 +122,6 @@ public class BookingLabService {
     }
 
     public Optional<BookingLab> getBookingLabById(int bookingLabId) {
-
-
        return bookingLabRepository.getBookingLabById(bookingLabId);
     }
 

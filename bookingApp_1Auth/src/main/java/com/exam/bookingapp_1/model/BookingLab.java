@@ -21,6 +21,8 @@ import static com.fasterxml.jackson.databind.type.LogicalType.DateTime;
 @Table(name ="bookinglab")
 public class BookingLab {
 
+   // private Reservation reservedDate;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonProperty("id")

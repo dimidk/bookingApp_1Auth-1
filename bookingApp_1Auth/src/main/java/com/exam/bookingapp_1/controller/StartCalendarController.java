@@ -30,8 +30,6 @@ import java.util.Map;
 @Slf4j
 public class StartCalendarController {
 
-//    private final AuthenticationManager authenticationManager;
-//    private final BusersDetailsService busersDetailsService;
     @Autowired
     private BookingLabService bookingLabService;
 
@@ -44,7 +42,8 @@ public class StartCalendarController {
         String labname = "ΔΕΠΥ Α";
 
         allBookings = bookingLabService.getByLabname(labname);
-
+//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//        log.info("just checking the user authentication: {}",auth.getName());
         return ResponseEntity.ok(allBookings);
 
     }
@@ -88,5 +87,10 @@ public class StartCalendarController {
     @RequestMapping("/depyc")
     public String depyc() {
         return "depyc";
+    }
+
+    @RequestMapping("/admin")
+    public String admin() {
+        return "admin";
     }
 }
