@@ -91,13 +91,19 @@
     </style>
 </head>
 <body>
+<div>
 <div class="login-container">
     <div class="button-container" sec:authorize="!isAuthenticated()">
         <a href="/login">Login</a>
         <a href="/register">Register</a>
+
     </div>
 
     <h3>Laboratory Booking Online Application</h3>
+</div>
+<div class="login-container">
+    <a href="/registeredUsers">For Registered Users</a>
+</div>
 </div>
 </body>
 </html>

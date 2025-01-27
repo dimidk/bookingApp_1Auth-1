@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BookingLabService {
 
-    @Autowired
+  //  @Autowired
     private final BookingLabRepository bookingLabRepository;
 
 
@@ -71,13 +71,6 @@ public class BookingLabService {
         log.info("this record to be updated with {} {}",bookingLab.getLabname(),bookingLab.getEnd());
 
 
-//        if (bookingLabRepository.existsBookingLabByLabnameAndEndBetween(updated.get().getLabname(), updated.get().getStart(), bookingLab.getEnd())) {
-//
-//            log.info("BookingLabService: try to update on reserved date");
-//
-//            return Optional.empty();
-//        }
-
         log.info("Updating booking lab");
         log.info("update booking with new date {} ", bookingLab.getEnd());
         updated.get().setEnd(bookingLab.getEnd());
@@ -119,6 +112,11 @@ public class BookingLabService {
         return bookingLabsList;
 
 
+    }
+
+    public List<BookingLab> getBookingsByLabnameAndUsername(String labname, String username) {
+
+        return bookingLabRepository.findByUsernameAndLabname(labname, username);
     }
 
     public Optional<BookingLab> getBookingLabById(int bookingLabId) {

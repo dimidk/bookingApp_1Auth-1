@@ -1,6 +1,7 @@
 package com.exam.bookingapp_1.repository;
 
 import com.exam.bookingapp_1.model.Busers;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

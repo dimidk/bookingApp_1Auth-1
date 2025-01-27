@@ -4,6 +4,7 @@ import com.exam.bookingapp_1.model.Busers;
 import com.exam.bookingapp_1.repository.BusersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -22,7 +23,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BusersDetailsService implements UserDetailsService {
 
-    private final BusersRepository busersRepository;
+    @Autowired
+    private BusersRepository busersRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

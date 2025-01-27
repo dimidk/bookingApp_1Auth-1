@@ -10,10 +10,6 @@ import java.util.List;
 @Repository
 public interface ReservedSlotsRepository extends JpaRepository<ReservedSlots, Integer> {
 
-    //List<LocalDateTime> getReservedSlotsByStartAndStartBetween(LocalDateTime start, LocalDateTime end);
-
-    //List<ReservedSlots> getReservedSlotsByStartAndStartBetween(LocalDateTime start, LocalDateTime end);
-
     List<ReservedSlots> getReservedSlotsByStartBetween(LocalDateTime start, LocalDateTime end);
 
     List<ReservedSlots> getReservedSlotsByLabnameAndStartBetween(String labname, LocalDateTime start, LocalDateTime end);

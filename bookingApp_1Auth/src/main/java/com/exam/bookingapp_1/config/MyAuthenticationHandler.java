@@ -1,6 +1,7 @@
 package com.exam.bookingapp_1.config;
 
 import com.exam.bookingapp_1.service.BusersDetailsService;
+import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -32,7 +33,7 @@ import java.util.*;
 public class MyAuthenticationHandler implements AuthenticationSuccessHandler {
 
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
-    private final BusersDetailsService busersDetailsService;
+   // private final BusersDetailsService busersDetailsService;
 
 
     //private final List<String> PATHS_TO_IGNORE_SETTING_SAMESITE = Arrays.asList("resources", <add other paths you want to exclude>);
@@ -127,7 +128,7 @@ public class MyAuthenticationHandler implements AuthenticationSuccessHandler {
         roleTargetUrlMap.put("USER","/depya?username=" + authentication.getName()) ;
 
         //roleTargetUrlMap.put("USER","/auth");
-        roleTargetUrlMap.put("ADMIN", "/index");
+        roleTargetUrlMap.put("ADMIN", "/admin");
 
         final Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         for (final GrantedAuthority grantedAuthority : authorities) {

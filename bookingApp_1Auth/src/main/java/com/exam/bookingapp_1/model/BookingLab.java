@@ -10,7 +10,6 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
-import static com.fasterxml.jackson.databind.type.LogicalType.DateTime;
 
 @Entity
 @AllArgsConstructor

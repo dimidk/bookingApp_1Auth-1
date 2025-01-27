@@ -14,6 +14,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/***
+ * Service for sending mail reminders
+ */
 
 @Component
 @RequiredArgsConstructor
@@ -21,8 +24,9 @@ import java.util.stream.Collectors;
 public class SendBookingRemindService {
 
     @Autowired
-    private final SendEmailService sendEmailService;
-    private final BusersService busersService;
+    private  SendEmailService sendEmailService;
+    @Autowired
+    private  BusersService busersService;
 
 
     //@EnableScheduling
@@ -52,8 +56,8 @@ public class SendBookingRemindService {
 
 
             body = "<p>Κύριοι, παρακαλώ προς υπενθύμιση κράτησης εργαστηρίων για την ερχόμενο Εξάμηνο.\n";
-            body = body + "Παρακαλούμε αν επιθυμείτε να γίνει κράτηση των εργαστηρίων όπως και την προηγούμενη χρονιά τότε επιβεβαίωστε με ένα ";
-            body = body + "μήνυμα στην ηλεκτρονική διεύθυνση adm@central.ntua.gr. Σε κάθε άλλη περίπτωση παρακαλούμε να προχωρήσετε στην κράτηση</p>";
+            body = body + "Παρακαλούμε αν επιθυμείτε να γίνει κράτηση των εργαστηρίων όπως και την προηγούμενη χρονιά τότε επιβεβαίωστε πηγαίνοντας ";
+            body = body + "στην αρχική σελίδα της πλατφόρμας και να κάνετε την αίτηση για αυτό το λόγο. Σε κάθε άλλη περίπτωση παρακαλούμε να προχωρήσετε στην κράτηση</p>";
             body = body + " των εργαστηρίων χρησιμοποιώντας τους κωδικούς σας.\n</p>";
             body = body + "<p>Με εκτίμηση \n Κέντρο Υπολογιστή </p>";
         }
@@ -64,7 +68,7 @@ public class SendBookingRemindService {
 
     }
 
-    @Scheduled(cron="0 0 */2 * * *")
+    @Scheduled(cron="0 0 12 LW 1-3 *")
     public void sendingReminders() {
 
         String contentExams = "Υπενθύμιση Εξεταστικής Περιόδου - Κράτηση εργαστηρίων προς εξέταση";

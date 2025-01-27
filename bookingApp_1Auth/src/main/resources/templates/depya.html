@@ -3,14 +3,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
-
-
-
-
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
         rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <!--  <script src="https://cdnjs.cloudfare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>-->
+
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <link rel="stylesheet"
         href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
@@ -18,10 +14,7 @@
           src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!--  <script src="https://code.jquery.com/jquery-2.2.4.min.js" />-->
 
-
-  <!--  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet" />-->
 
 <!--  //I use the media=print and loads my stylesheet-->
   <link rel="stylesheet" media="print"  href="/css/assets_css_fullcalendar.print.css">
@@ -432,58 +425,138 @@
       dateEnd = dateEndStr + " " + timeEndStr;
       console.log("date and time end in string:" + dateEnd);
 
-      createModal(dateStartStr,timeStartStr,dateEndStr,timeEndStr);
+      //createModal(dateStartStr,timeStartStr,dateEndStr,timeEndStr);
 
       await  getAllBookings().then();
       //newEvent.title = modalEventTitle.value.trim();
-      myModal.show();
+    //  myModal.show();
 
-      var modalSaveChanges = document.getElementById('modalSave');
+      createDialog = $("#create-dialog").dialog({
+        autoOpen: false,
+        height: 450,
+        width: 350,
+        modal: true,
+        buttons: {
+          Cancel: function () {
+            $(this).dialog("close");
+          },
+          Save: async function(e) {
+            e.preventDefault();
 
-      modalSaveChanges.addEventListener('click',async function (e) {
-        e.preventDefault();
-        var modalEventTitle = document.getElementById('eventTitle');
-        console.log('submit data from modal '+ modalSaveChanges.id);
-        console.log('title event ' + modalEventTitle.value.trim());
-        myModal.hide();
-        newEvent.title = "Event: " + modalEventTitle.value.trim() + " Υπεύθυνος: " + whichLabUsername;
+            if (document.getElementById("recursionCheckbox").checked) {
 
-        if (document.getElementById("recursionCheckbox").checked) {
+              let dateStartRecur = document.getElementById("newStartDate").value;
+              let dateEndRecur = document.getElementById("newEndDate").value;
+              console.log("Recursion Start Date: " + dateStartRecur);
+              console.log("Recursion End Date: " + dateEndRecur);
 
-          let dateStartRecur = document.getElementById("newStartDate").value;
-          let dateEndRecur = document.getElementById("newEndDate").value;
-          console.log("Recursion Start Date: " + dateStartRecur);
-          console.log("Recursion End Date: " + dateEndRecur);
+              let result = await addRecursionEvent(dateStartRecur,dateEndRecur).then();
+              console.log("HttpStatus from recurring booking ",result);
+              if (result !== 200) {
+                alert("Your selections are overlapping other reservations");
+              }
+              else {
 
-          let result = await addRecursionEvent(dateStartRecur,dateEndRecur).then();
-          console.log("HttpStatus from recurring booking ",result);
-          if (result !== 200) {
-            alert("Your selections are overlapping other reservations");
-          }
-          else {
-            location.reload();
-          }
+                location.reload();
+              }
+              $(this).dialog("close");
+              console.log("result from adding recursing Event "+ result);
+            } else {
+                let result = await addEvent().then();
+                if (!result) {
+                  alert("Your selection tries to reserve lab in reserved date");
+                } else {
 
-          console.log("result from adding recursing Event "+ result);
+
+                  //this reload from database entry and displays event on calendar
+                  location.reload();
+
+                  }
+                $(this).dialog("close");
+                console.log("result from adding Event " + result);
+            }
+
+            //$(this).dialog("submit")
+          },
+
+
+
+        },
+        close: function () {
+          $(this).dialog("close");
         }
-        else {
-          let result = await addEvent().then();
-          if (!result) {
-            alert("Your selection tries to reserve lab in reserved date");
-          }
-          else {
+      });
 
-            //this reload from database entry and displays event on calendar
-            location.reload();
 
-          }
+      //var modalSaveChanges = document.getElementById('modalSave');
 
-          console.log("result from adding Event "+ result);
-        }
+      // modalSaveChanges.addEventListener('click',async function (e) {
+      //   e.preventDefault();
+      //   var modalEventTitle = document.getElementById('eventTitle');
+      //   console.log('submit data from modal '+ modalSaveChanges.id);
+      //   console.log('title event ' + modalEventTitle.value.trim());
+      //   myModal.hide();
+      //
+      //   newEvent.title = "Event: " + modalEventTitle.value.trim() + " Υπεύθυνος: " + whichLabUsername;
+      //
+      //   if (document.getElementById("recursionCheckbox").checked) {
+      //
+      //     let dateStartRecur = document.getElementById("newStartDate").value;
+      //     let dateEndRecur = document.getElementById("newEndDate").value;
+      //     console.log("Recursion Start Date: " + dateStartRecur);
+      //     console.log("Recursion End Date: " + dateEndRecur);
+      //
+      //     let result = await addRecursionEvent(dateStartRecur,dateEndRecur).then();
+      //     console.log("HttpStatus from recurring booking ",result);
+      //     if (result !== 200) {
+      //       alert("Your selections are overlapping other reservations");
+      //     }
+      //     else {
+      //       location.reload();
+      //     }
+      //
+      //     console.log("result from adding recursing Event "+ result);
+      //   }
+      //   else {
+      //     let result = await addEvent().then();
+      //     if (!result) {
+      //       alert("Your selection tries to reserve lab in reserved date");
+      //     }
+      //     else {
+      //
+      //
+      //       //this reload from database entry and displays event on calendar
+      //       location.reload();
+      //
+      //     }
+      //
+      //     console.log("result from adding Event "+ result);
+      //   }
+      //
+      // },true);
 
-      },true);
+      let modalDateStart = document.getElementById("startDateFromCal");
+      modalDateStart.textContent = dateStartStr+" at"+timeStartStr;
+
+      //let modalDateStart = document.getElementById('startDateFromCal').innerText = dateStartStr + "  at:" + timeStartStr;
+      let modalDateEnd = document.getElementById('endDateFromCal').textContent = dateEndStr + "  at:" + timeEndStr;
+      let modalLabname = document.getElementById('labname');
+      modalLabname.textContent = 'ΔΕΠΥ Α';
+
+      document.getElementById('labuser').textContent = whichLabUsername;
+
+      var modalEventTitle = document.getElementById('eventTitle');
+      console.log('submit data from modal ');
+      console.log('title event ' + modalEventTitle.value.trim());
+      //myModal.hide();
+
+      newEvent.title = "Event: " + modalEventTitle.value.trim() + " Υπεύθυνος: " + whichLabUsername;
 
       console.log("event with: " + newEvent.id + " "+ newEvent.start +" "+ newEvent.end + " "+ newEvent.title);
+      //myModal.remove();
+
+
+      createDialog.dialog("open");
 
     },
     eventChange: async function (info) {
@@ -550,7 +623,7 @@
               console.log("eventToDelete id " + eventToDeleteJson.id);
 
               console.log("eventToDelete logged user " + whichLabUsername);
-              if (eventToDeleteJson.username !== whichLabUsername) {
+              if (eventToDeleteJson.username !== whichLabUsername && whichLabUsername !== "admin") {
                 alert("dont have any permission");
                 location.reload();
               } else {
@@ -630,72 +703,128 @@
   // });
 </script>
 
-<div id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" class="modal fade" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Νέα Κράτηση Εργαστηρίου</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form autocomplete="off" action="">
-          <div class="form-group">
-            <h6>Κράτηση για: </h6>
-            <input id="eventTitle" type="text" autocomplete="nope" class="form-control" /><br>
 
-            <div>
-              <label for="startDateFromCal"><b>Έναρξη: </b></label>
-              <span id="startDateFromCal"></span>
-            </div>
-            <div>
-              <label for="endDateFromCal"><b>Λήξη: </b></label>
-              <span id="endDateFromCal"></span>
-            </div>
-            <div>
-              <label for="labname"><b>Εργαστήριο: </b></label>
-              <span id="labname"></span>
-            </div>
-            <div>
-              <label for="labuser"><b>Υπεύθυνος: </b></label>
-              <span id="labuser"></span>
-            </div>
+<div id="create-dialog" title="New Reservation" class="ui-helper-hidden">
 
-            <div class="form-check my-3">
-              <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="recursionCheckbox"
-                      onclick="toggleRecursionFields()"
-              />
-              <label class="form-check-label" for="recursionCheckbox">
-                Επανάληψη κράτησης
-              </label>
-            </div>
+  <form id="create-event-form">
+    <fieldset>
 
-            <!-- Recursion Fields -->
-            <div id="recursionFields" style="display: none;">
-              <div class="mb-3">
-                <label for="newStartDate"><b>Νέα Έναρξη: </b></label>
-                <input type="date" id="newStartDate" class="form-control" />
-              </div>
-              <div class="mb-3">
-                <label for="newEndDate"><b>Νέα Λήξη: </b></label>
-                <input type="date" id="newEndDate" class="form-control" />
-              </div>
-            </div>
-          </div>
-        </form>
+      <input id="eventTitle" type="text" autocomplete="nope" class="form-control" /><br>
+
+      <div>
+        <label for="startDateFromCal"><b>Έναρξη: </b></label>
+        <button id="startDateFromCal" type="button"></button>
+<!--        <span id="startDateFromCal"></span>-->
       </div>
-      <div class="modal-footer">
-        <button type="button" id="modalClose" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" id="modalSave" class="btn btn-primary">Save</button>
+      <div>
+        <label for="endDateFromCal"><b>Λήξη: </b></label>
+        <span id="endDateFromCal"></span>
       </div>
-    </div>
-  </div>
+      <div>
+        <label for="labname"><b>Εργαστήριο: </b></label>
+        <span id="labname"></span>
+      </div>
+      <div>
+        <label for="labuser"><b>Υπεύθυνος: </b></label>
+        <span id="labuser"></span>
+      </div>
+
+      <div class="form-check my-3">
+        <input
+                class="form-check-input"
+                type="checkbox"
+                id="recursionCheckbox"
+                onclick="toggleRecursionFields()"
+        />
+        <label class="form-check-label" for="recursionCheckbox">
+          Επανάληψη κράτησης
+        </label>
+      </div>
+
+      <!-- Recursion Fields -->
+      <div id="recursionFields" style="display: none;">
+        <div class="mb-3">
+          <label for="newStartDate"><b>Νέα Έναρξη: </b></label>
+          <input type="date" id="newStartDate" class="form-control" />
+        </div>
+        <div class="mb-3">
+          <label for="newEndDate"><b>Νέα Λήξη: </b></label>
+          <input type="date" id="newEndDate" class="form-control" />
+        </div>
+      </div>
+
+
+<!--      <button data-close-modal>Close</button>-->
+<!--      <button data-save-modal>Save</button>-->
+
+    </fieldset>
+  </form>
+
 </div>
 
+<!--<div id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" class="modal fade" aria-hidden="true">-->
+<!--  <div class="modal-dialog">-->
+<!--    <div class="modal-content">-->
+<!--      <div class="modal-header">-->
+<!--        <h5 class="modal-title" id="exampleModalLabel">Νέα Κράτηση Εργαστηρίου</h5>-->
+<!--        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
+<!--      </div>-->
+<!--      <div class="modal-body">-->
+<!--        <form autocomplete="off" action="">-->
+<!--          <div class="form-group">-->
+<!--            <h6>Κράτηση για: </h6>-->
+<!--            <input id="eventTitle" type="text" autocomplete="nope" class="form-control" /><br>-->
 
+<!--            <div>-->
+<!--              <label for="startDateFromCal"><b>Έναρξη: </b></label>-->
+<!--              <span id="startDateFromCal"></span>-->
+<!--            </div>-->
+<!--            <div>-->
+<!--              <label for="endDateFromCal"><b>Λήξη: </b></label>-->
+<!--              <span id="endDateFromCal"></span>-->
+<!--            </div>-->
+<!--            <div>-->
+<!--              <label for="labname"><b>Εργαστήριο: </b></label>-->
+<!--              <span id="labname"></span>-->
+<!--            </div>-->
+<!--            <div>-->
+<!--              <label for="labuser"><b>Υπεύθυνος: </b></label>-->
+<!--              <span id="labuser"></span>-->
+<!--            </div>-->
 
+<!--            <div class="form-check my-3">-->
+<!--              <input-->
+<!--                      class="form-check-input"-->
+<!--                      type="checkbox"-->
+<!--                      id="recursionCheckbox"-->
+<!--                      onclick="toggleRecursionFields()"-->
+<!--              />-->
+<!--              <label class="form-check-label" for="recursionCheckbox">-->
+<!--                Επανάληψη κράτησης-->
+<!--              </label>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; Recursion Fields &ndash;&gt;-->
+<!--            <div id="recursionFields" style="display: none;">-->
+<!--              <div class="mb-3">-->
+<!--                <label for="newStartDate"><b>Νέα Έναρξη: </b></label>-->
+<!--                <input type="date" id="newStartDate" class="form-control" />-->
+<!--              </div>-->
+<!--              <div class="mb-3">-->
+<!--                <label for="newEndDate"><b>Νέα Λήξη: </b></label>-->
+<!--                <input type="date" id="newEndDate" class="form-control" />-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </form>-->
+<!--      </div>-->
+<!--      <div class="modal-footer">-->
+<!--        <button type="button" id="modalClose" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>-->
+<!--        <button type="button" id="modalSave" class="btn btn-primary">Save</button>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</div>-->
 
 
 <div id="edit-dialog-form" title="Λεπτομέρειες Κράτησης" class="ui-helper-hidden">

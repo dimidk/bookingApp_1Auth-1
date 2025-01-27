@@ -2,15 +2,12 @@ package com.exam.bookingapp_1.controller;
 
 import com.exam.bookingapp_1.model.BookingLab;
 import com.exam.bookingapp_1.model.Busers;
+import com.exam.bookingapp_1.model.Role;
 import com.exam.bookingapp_1.repository.BookingLabRepository;
-import com.exam.bookingapp_1.service.BookingLabService;
+import com.exam.bookingapp_1.service.*;
 import com.exam.bookingapp_1.model.ReservedSlots;
-import com.exam.bookingapp_1.service.BusersService;
-import com.exam.bookingapp_1.service.ReservedSlotsService;
-import com.exam.bookingapp_1.service.SendEmailService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,7 +16,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 
-import java.io.UnsupportedEncodingException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -27,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.mail.MessagingException;
+import javax.swing.text.html.Option;
 
 
 @Controller
@@ -34,16 +31,24 @@ import javax.mail.MessagingException;
 @Slf4j
 public class BookingController {
 
-    @Autowired
-    private BookingLabService bookingLabService;
-    @Autowired
-    private BookingLabRepository bookingLabRepository;
-    @Autowired
-    private ReservedSlotsService reservedSlotsService;
+    //because of problems instead of Autowired use private final and @AllArgsConstructor annotation
+    //to avoid any bug issues
 
-    @Autowired
-    private SendEmailService sendEmailService;
+    //@Autowired
+    private final BookingLabService bookingLabService;
 
+    private final BookingService bookingService;
+
+//    //@Autowired
+//    private final BookingLabRepository bookingLabRepository;
+//
+//    //@Autowired
+//    private final ReservedSlotsService reservedSlotsService;
+
+    //@Autowired
+    private final SendEmailService sendEmailService;
+
+    //@Autowired
     private final BusersService busersService;
 
 
@@ -54,7 +59,7 @@ public class BookingController {
      * But there is an error that the first date that is free is reserved but the others reserverd
      * are not re-reserved
      *
-     * @return
+     *
      */
 
     @GetMapping("/allBookings")
@@ -62,8 +67,8 @@ public class BookingController {
 
         long num;
 
-//        num = bookingLabService.countAll();
-        num = bookingLabService.getBookingLabMaxId();
+//        num = bookingLabService.getBookingLabMaxId();
+        num = bookingService.numAllBookings();
         return ResponseEntity.ok(String.valueOf(num));
 
     }
@@ -88,17 +93,19 @@ public class BookingController {
     @PostMapping("/updateBooking")
     public ResponseEntity<Optional<BookingLab>> updateBookingLab(@RequestBody  BookingLab bookingLab) {
 
-        Optional<BookingLab> recordUpdated = null;
-        String username = null;
-    //first check the existence of the event
-       recordUpdated = bookingLabService.getBookingLabById(bookingLab.getId());
-       username = getAuthenticationUsername();
+    //first check the existence of the even
+
+        Optional<BookingLab> recordUpdated = bookingLabService.getBookingLabById(bookingLab.getId());
+        String username = getAuthenticationUsername();
         //recordUpdated = bookingLabService.updateBookingLab(bookingLab);
         if (recordUpdated.isPresent() && recordUpdated.get().getUsername().equals(username)) {
 
             log.info("event with attributes {} {} {} updated", recordUpdated.get().getId(),recordUpdated.get().getStart(),bookingLab.getEnd());
 
-            recordUpdated = bookingLabService.updateBookingLab(bookingLab);
+            //old design
+            //recordUpdated = bookingLabService.updateBookingLab(bookingLab);
+
+            recordUpdated = bookingService.updateBooking(bookingLab);
             return ResponseEntity.ok(recordUpdated);
         }
         else {
@@ -120,38 +127,34 @@ public class BookingController {
         log.info("new event information {} {} {} {} {} {} ",bookingLab.getId(),bookingLab.getTitle(),bookingLab.getUsername(),bookingLab.getStart(), bookingLab.getEnd(),bookingLab.getLabname());
 
         log.info("end time presentation {}" ,bookingLab.getEnd());
-//        if (bookingLabOnReservedDate(bookingLab.getLabname())) {
+
+//        ReservedSlots newResSlots = ReservedSlots.builder()
+//                .labname(bookingLab.getLabname())
+//                .end(bookingLab.getEnd())
+//                .start(bookingLab.getStart())
+//                .build();
 //
-//            log.info("booking lab {} already exists or trying to book on reserved date {} ", bookingLab.getId(), bookingLab.getStart());
-//        }
-//        else {
-        ReservedSlots newResSlots = ReservedSlots.builder()
-                .labname(bookingLab.getLabname())
-                .end(bookingLab.getEnd())
-                .start(bookingLab.getStart())
-                .build();
-
-            newEvent = BookingLab.builder()
-                    .id(bookingLab.getId())
-                    .title(bookingLab.getTitle())
-                    .start(bookingLab.getStart())
-                    .end(bookingLab.getEnd())
-                    .username(bookingLab.getUsername())
-                    .labname(bookingLab.getLabname())
-                    .build();
-
-            log.info("logging the new Event {} {} {} {} {} {} :",newEvent.getId(),newEvent.getTitle(),newEvent.getStart(),newEvent.getEnd(),newEvent.getUsername(),newEvent.getLabname());
-            bookingLabService.add(newEvent);
-            reservedSlotsService.add(newResSlots);
-
-            ReservedSlots check = new ReservedSlots();
-            check.setStart(LocalDateTime.of(2024,12,5,13,30));
-            check.setEnd(LocalDateTime.of(2024,12,5,14,30));
-            log.info("checking reserved slot {}:",newResSlots.overlaps(check));
+//            newEvent = BookingLab.builder()
+//                    .id(bookingLab.getId())
+//                    .title(bookingLab.getTitle())
+//                    .start(bookingLab.getStart())
+//                    .end(bookingLab.getEnd())
+//                    .username(bookingLab.getUsername())
+//                    .labname(bookingLab.getLabname())
+//                    .build();
+//
+//            log.info("logging the new Event {} {} {} {} {} {} :",newEvent.getId(),newEvent.getTitle(),newEvent.getStart(),newEvent.getEnd(),newEvent.getUsername(),newEvent.getLabname());
+//            bookingLabService.add(newEvent);
+//            reservedSlotsService.add(newResSlots);
+//
+//            ReservedSlots check = new ReservedSlots();
+//            check.setStart(LocalDateTime.of(2024,12,5,13,30));
+//            check.setEnd(LocalDateTime.of(2024,12,5,14,30));
+//            log.info("checking reserved slot {}:",newResSlots.overlaps(check));
 
             //bookingLabService.add(bookingLab);
        // }
-
+        newEvent = bookingService.addNewBooking(bookingLab);
         return ResponseEntity.ok(Optional.ofNullable(newEvent));
     }
 
@@ -243,89 +246,87 @@ public class BookingController {
         }
         );
 
-
-
         //return resSlots.stream().noneMatch(existing -> existing.overlaps(newResSlot) || newResSlot.overlaps(existing));
         return a;
     }
 
 
-    private boolean addingRepeatingEvents(BookingLab bookingLab,int times) {
-
-        BookingLab newEvent = null;
-        ReservedSlots  resSlots = new ReservedSlots();
-
-        int id = bookingLab.getId();
-        LocalDateTime startTime = bookingLab.getStart();
-        LocalDateTime endTime = bookingLab.getEnd();
-        log.info("addingRepeating endTime date {}",endTime);
-
-        //problem with the query
-        List<ReservedSlots> reservedSlotsList = reservedSlotsService.getAllLabReservedSlots(bookingLab.getLabname());
-        reservedSlotsList.stream().forEach(reservedSlots -> log.info("query result: start date :{}",reservedSlots.getStart()));
-
-       // List<LocalDateTime> datesStart = reservedDatesStart(bookingLab.getLabname(),startTime,startTime.plusWeeks(times));
-
-        List<ReservedSlots> newReserved = IntStream.range(0,times+1)
-                .mapToObj(i -> {
-
-                    return ReservedSlots.builder()
-                            .build();
-                        })
-                .collect(Collectors.toList());
-        int i=0;
-        LocalDateTime start = startTime;
-        LocalDateTime end = endTime;
-        for(ReservedSlots reservedSlot : newReserved) {
-
-            reservedSlot.setStart(start.plusWeeks(i));
-            reservedSlot.setEnd(end.plusWeeks(i));
-            i++;
-
-        }
-
-        newReserved.stream().forEach(resslot -> log.info("new reservation date {} {}",resslot.getStart(),resslot.getEnd()));
-        //canReserveSlots(reservedSlotsList,newReserved);
-//        if (!canReserveSlots(reservedSlotsList,newReserved)) {
+//    private boolean addingRepeatingEvents(BookingLab bookingLab,int times) {
+//
+//        BookingLab newEvent = null;
+//        ReservedSlots  resSlots = new ReservedSlots();
+//
+//        int id = bookingLab.getId();
+//        LocalDateTime startTime = bookingLab.getStart();
+//        LocalDateTime endTime = bookingLab.getEnd();
+//        log.info("addingRepeating endTime date {}",endTime);
+//
+//        //problem with the query
+//        List<ReservedSlots> reservedSlotsList = reservedSlotsService.getAllLabReservedSlots(bookingLab.getLabname());
+//        reservedSlotsList.forEach(reservedSlots -> log.info("query result: start date :{}",reservedSlots.getStart()));
+//
+//       // List<LocalDateTime> datesStart = reservedDatesStart(bookingLab.getLabname(),startTime,startTime.plusWeeks(times));
+//
+//        List<ReservedSlots> newReserved = IntStream.range(0,times+1)
+//                .mapToObj(i -> {
+//
+//                    return ReservedSlots.builder()
+//                            .build();
+//                        })
+//                .toList();
+//        int i=0;
+//        LocalDateTime start = startTime;
+//        LocalDateTime end = endTime;
+//        for(ReservedSlots reservedSlot : newReserved) {
+//
+//            reservedSlot.setStart(start.plusWeeks(i));
+//            reservedSlot.setEnd(end.plusWeeks(i));
+//            i++;
+//
+//        }
+//
+//        newReserved.forEach(resslot -> log.info("new reservation date {} {}",resslot.getStart(),resslot.getEnd()));
+//        //canReserveSlots(reservedSlotsList,newReserved);
+////        if (!canReserveSlots(reservedSlotsList,newReserved)) {
+////            return false;
+////        }
+//        List<BookingLab> addBookings = new ArrayList<>();
+//        List<ReservedSlots> addReservedSlots = new ArrayList<>();
+//        List<Boolean> canReserved = new ArrayList<>();
+//
+//        for ( i = 0; i <= times; i++) {
+//
+//            newEvent = BookingLab.builder()
+//                    .id(id+i)
+//                    .title(bookingLab.getTitle())
+//                    .start(startTime.plusWeeks(i))
+//                    .end(endTime.plusWeeks(i))
+//                    .username(bookingLab.getUsername())
+//                    .labname(bookingLab.getLabname())
+//                    .build();
+//
+//            ReservedSlots newResSlot = ReservedSlots.builder()
+//                    .start(startTime.plusWeeks(i))
+//                    .end(endTime.plusWeeks(i))
+//                    .labname(bookingLab.getLabname())
+//                    .build();
+//            addBookings.add(newEvent);
+//            addReservedSlots.add(newResSlot);
+//
+//            canReserved.add(canReserve(reservedSlotsList,newResSlot));
+//            log.info("can reserve check new slot: {} {}",canReserve(reservedSlotsList,newResSlot),
+//                    newResSlot.getStart());
+//        }
+//        int countFalse = Math.toIntExact(canReserved.stream().filter(value -> !value).count());
+//        if (countFalse > 0) {
+//            log.info("No possibility to reserve lab on these dates");
 //            return false;
 //        }
-        List<BookingLab> addBookings = new ArrayList<>();
-        List<ReservedSlots> addReservedSlots = new ArrayList<>();
-        List<Boolean> canReserved = new ArrayList<>();
-
-        for ( i = 0; i <= times; i++) {
-
-            newEvent = BookingLab.builder()
-                    .id(id+i)
-                    .title(bookingLab.getTitle())
-                    .start(startTime.plusWeeks(i))
-                    .end(endTime.plusWeeks(i))
-                    .username(bookingLab.getUsername())
-                    .labname(bookingLab.getLabname())
-                    .build();
-
-            ReservedSlots newResSlot = ReservedSlots.builder()
-                    .start(startTime.plusWeeks(i))
-                    .end(endTime.plusWeeks(i))
-                    .labname(bookingLab.getLabname())
-                    .build();
-            addBookings.add(newEvent);
-            addReservedSlots.add(newResSlot);
-
-            canReserved.add(canReserve(reservedSlotsList,newResSlot));
-            log.info("can reserve check new slot: {} {}",canReserve(reservedSlotsList,newResSlot),
-                    newResSlot.getStart());
-        }
-        int countFalse = Math.toIntExact(canReserved.stream().filter(value -> !value).count());
-        if (countFalse > 0) {
-            log.info("No possibility to reserve lab on these dates");
-            return false;
-        }
-        bookingLabService.addAll(addBookings);
-        reservedSlotsService.addAll(addReservedSlots);
-
-        return true;
-    }
+//        bookingLabService.addAll(addBookings);
+//        reservedSlotsService.addAll(addReservedSlots);
+//
+//        return true;
+//    }
 
     @PostMapping("/recurbooking/{dateStart}/{dateEnd}")
     public ResponseEntity<HttpStatus> saveRecurBooking(@RequestBody  BookingLab bookingLab, @PathVariable String dateStart, @PathVariable String dateEnd) {
@@ -349,7 +350,7 @@ public class BookingController {
         long numberOfWeeks = ChronoUnit.WEEKS.between(LocalDate.parse(dateStart), LocalDate.parse(dateEnd));
         log.info("number of weeks to reserve the event: {}", numberOfWeeks);
 
-        if (!addingRepeatingEvents(bookingLab,Integer.parseInt(Long.toString(numberOfWeeks)))) {
+        if (!bookingService.addingRepeatingEvents(bookingLab,Integer.parseInt(Long.toString(numberOfWeeks)))) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(HttpStatus.CONFLICT);
         }
 
@@ -360,22 +361,26 @@ public class BookingController {
         String username = null;
 
         Authentication authUser = SecurityContextHolder.getContext().getAuthentication();
+
         username = authUser.getName();
 
         return username;
 
     }
 
+    private Authentication getAuthentication() {
+
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
     @PostMapping("/deleteBooking")
     public ResponseEntity<BookingLab> deleteBooking(@RequestBody BookingLab bookingLab) throws MessagingException {
 
-        Optional<BookingLab> recordDeleted = null;
-        BookingLab notFound = null;
-        ReservedSlots resSlot = null;
+        BookingLab notFound = null ;
 
         log.info("event to delete: {} {} {} ",bookingLab.getId(),bookingLab.getTitle(),bookingLab.getStart());
 
-        recordDeleted = bookingLabService.getBookingLabById(bookingLab.getId());
+        Optional<BookingLab> recordDeleted = bookingLabService.getBookingLabById(bookingLab.getId());
         log.info("delete booking lab {}", recordDeleted.get().getId());
 
         String username = getAuthenticationUsername();
@@ -384,50 +389,65 @@ public class BookingController {
 
         log.info("user in booking lab {}", recordDeleted.get().getUsername());
 
-        if (!username.equals(recordDeleted.get().getUsername())) {
+
+
+        if (!username.equals(recordDeleted.get().getUsername()) && getAuthentication().getAuthorities().equals(Role.valueOf("USER"))) {
             log.info("You are not authorized to delete this event");
 
             //return ResponseEntity.ofNullable(recordDeleted);
 
             return ResponseEntity.ofNullable(notFound);
         }
-        else {
+//        else {
+//
+//           boolean a = bookingLabService.deleteBookingLab(bookingLab.getId());
+//           ReservedSlots resSlot = ReservedSlots.builder()
+//                   .labname(bookingLab.getLabname())
+//                   .start(bookingLab.getStart())
+//                   .end(bookingLab.getEnd())
+//                   .build();
+//           reservedSlotsService.deleteReservedSlots(resSlot);
+//
+//           HashMap<String,String> params = prepareEmailParams();
+////           sendEmail.emailParams(params);
+//            sendEmailService.sendNewMail(params.get("To"), params.get("Subject"), params.get("Body"));
+//        }
 
-           boolean a = bookingLabService.deleteBookingLab(bookingLab.getId());
-           resSlot = ReservedSlots.builder()
-                   .labname(bookingLab.getLabname())
-                   .start(bookingLab.getStart())
-                   .end(bookingLab.getEnd())
-                   .build();
-           reservedSlotsService.deleteReservedSlots(resSlot);
-
-           HashMap<String,String> params = prepareEmailParams();
+        recordDeleted = bookingService.deleteBooking(bookingLab);
+        HashMap<String,String> params = prepareEmailParams();
 //           sendEmail.emailParams(params);
-            sendEmailService.sendNewMail(params.get("To"), params.get("Subject"), params.get("Body"));
-        }
+        sendEmailService.sendNewMail(params.get("To"), params.get("Subject"), params.get("Body"));
+        String to_sec = "mkyrieri@central.ntua.gr";
+        sendEmailService.sendNewMail(to_sec, params.get("Subject"), params.get("Body"));
+
         return ResponseEntity.of(recordDeleted);
 
     }
 
-    private List<ReservedSlots> findResSlotsToDelete(BookingLab bookingLab,int times) {
-
-
-        List<Integer> ids = IntStream.range(bookingLab.getId(),bookingLab.getId()+times+1)
-                .boxed().toList();
-
-        List<ReservedSlots> resSlotsList = reservedSlotsService.getReservedSlotsBetween(bookingLab.getLabname(),bookingLab.getStart(),bookingLab.getStart().plusWeeks(times+1));
-        resSlotsList.stream().forEach(res -> log.info("record for deletion:{} {} {}",res.getLabname(),res.getStart(),res.getEnd()));
-
-        List<LocalDateTime> bookings = ids.stream().map(i -> bookingLabService.getBookingLabById(i)
-                .map(d -> d.getStart()).orElseThrow()).toList();
-        List<ReservedSlots> finalForDeletion = resSlotsList.stream().filter(date -> bookings.stream().anyMatch(b -> b.isEqual(date.getStart())))
-                .collect(Collectors.toList());
-
-        //if finalForDeletion is Empty proceeds with the deletion of bookings
-        finalForDeletion.stream().forEach(res -> log.info("delete the record:{} {} {}",res.getLabname(),res.getStart(),res.getEnd()));
-
-        return finalForDeletion;
-    }
+//    private List<ReservedSlots> findResSlotsToDelete(BookingLab bookingLab,int times) {
+//
+//
+//        List<Integer> ids = IntStream.range(bookingLab.getId(),bookingLab.getId()+times+1)
+//                .boxed().toList();
+//
+//        List<ReservedSlots> resSlotsList = reservedSlotsService.getReservedSlotsBetween(bookingLab.getLabname(),bookingLab.getStart(),bookingLab.getStart().plusWeeks(times+1));
+//        resSlotsList.forEach(res -> log.info("record for deletion:{} {} {}",res.getLabname(),res.getStart(),res.getEnd()));
+//        //resSlotsList.stream().forEach(res -> log.info("record for deletion:{} {} {}",res.getLabname(),res.getStart(),res.getEnd()));
+//
+//        List<LocalDateTime> bookings = ids.stream().map(i -> bookingLabService.getBookingLabById(i)
+//                .map(BookingLab::getStart).orElseThrow()).toList();
+//            //    .map(d -> d.getStart()).orElseThrow()).toList();
+//
+//        List<ReservedSlots> finalForDeletion = resSlotsList.stream().filter(date -> bookings.stream().anyMatch(b -> b.isEqual(date.getStart())))
+//                .collect(Collectors.toList());
+//
+//        //if finalForDeletion is Empty proceeds with the deletion of bookings
+//        finalForDeletion.forEach(res -> log.info("delete the record:{} {} {}",res.getLabname(),res.getStart(),res.getEnd()));
+//
+//        //finalForDeletion.stream().forEach(res -> log.info("delete the record:{} {} {}",res.getLabname(),res.getStart(),res.getEnd()));
+//
+//        return finalForDeletion;
+//    }
 
     private HashMap<String,String> prepareEmailParams() {
 
@@ -435,8 +455,9 @@ public class BookingController {
 
 
         Busers user = busersService.getUserEmail(getAuthenticationUsername());
-        String to  = user.getEmail();
-        //String to = "dekadimi@mail.ntua.gr";
+//        String to  = user.getEmail();
+        String to = "dimideka.dimi@gmail.com";
+
         params.put("To",to);
 
         String subject = "Days and Times of reservation Lab changed!";
@@ -455,11 +476,9 @@ public class BookingController {
 //    public ResponseEntity<BookingLab> recurDeleteBooking(@RequestBody BookingLab bookingLab,@PathVariable String startDate,@PathVariable String endDate) {
     public ResponseEntity<HttpStatus> recurDeleteBooking(@RequestBody BookingLab bookingLab,@PathVariable String startDate,@PathVariable String endDate) {
 
-        Optional<BookingLab> recordDeleted = null;
         BookingLab notFound = null;
-        List<ReservedSlots> resSlotsList = null;
 
-        recordDeleted = bookingLabService.getBookingLabById(bookingLab.getId());
+        Optional<BookingLab> recordDeleted = bookingLabService.getBookingLabById(bookingLab.getId());
         if (recordDeleted.isEmpty()) {
             throw new RuntimeException("there is no such a booking event");
         }
@@ -469,22 +488,26 @@ public class BookingController {
 
         log.info("number of weeks to delete the event {} for user  {}", numberOfWeeks, username);
 
-        if (!username.equals(recordDeleted.get().getUsername())) {
+        if (!username.equals(recordDeleted.get().getUsername()) && getAuthentication().getAuthorities().equals(Role.valueOf("USER"))) {
             log.info("You are not authorized to delete this event");
 
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        else {
-            //get all events from id to id+numberOfWeeks and delete them instead of the loop
-            List<Integer> ids = IntStream.range(bookingLab.getId(),bookingLab.getId()+weeksNum+1)
-                    .boxed().toList();
+//        else {
+//            //get all events from id to id+numberOfWeeks and delete them instead of the loop
+//            List<Integer> ids = IntStream.range(bookingLab.getId(),bookingLab.getId()+weeksNum+1)
+//                    .boxed().toList();
+//
+//            reservedSlotsService.deleteReservedSlots(findResSlotsToDelete(recordDeleted.get(),weeksNum));
+//            //bookingLabRepository.deleteAllById(ids);
+//            bookingLabService.deleteRecurBookingLab(ids);
 
-            reservedSlotsService.deleteReservedSlots(findResSlotsToDelete(recordDeleted.get(),weeksNum));
-            //bookingLabRepository.deleteAllById(ids);
-            bookingLabService.deleteRecurBookingLab(ids);
-//            HashMap<String,String> params = prepareEmailParams();
-//            sendEmail.emailParams(params);
-        }
+//        }
+
+        bookingService.deleteRepeatingBookings(recordDeleted.get(),weeksNum);
+        HashMap<String,String> params = prepareEmailParams();
+        sendEmailService.sendNewMail(params.get("To"), params.get("Subject"), params.get("Body"));
+
 
         return  ResponseEntity.status(HttpStatus.OK).build();
 
@@ -494,10 +517,11 @@ public class BookingController {
     @GetMapping("/bookingLab/{id}")
     public ResponseEntity<BookingLab> getBookingLabById(@PathVariable String id) {
 
-        Optional<BookingLab> bookingLab = null;
+        Optional<BookingLab> bookingLab ;
 
-        bookingLab = bookingLabRepository.getBookingLabById(Integer.parseInt(id));
+        //bookingLab = bookingLabRepository.getBookingLabById(Integer.parseInt(id));
 
+        bookingLab = bookingLabService.getBookingLabById(Integer.parseInt(id));
         return ResponseEntity.of(bookingLab);
         //return ResponseEntity.ok(bookingLab);
 

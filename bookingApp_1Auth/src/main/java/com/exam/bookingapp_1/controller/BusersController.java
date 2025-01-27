@@ -6,6 +6,7 @@ import com.exam.bookingapp_1.repository.BusersRepository;
 import com.exam.bookingapp_1.service.BusersService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,14 +23,15 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
+@RequiredArgsConstructor
 @Slf4j
 public class BusersController {
 
-    @Autowired
-    private BusersRepository busersRepository;
+    //@Autowired
+    private final BusersRepository busersRepository;
 
-    @Autowired
-    private BusersService busersService;
+    //@Autowired
+    private final BusersService busersService;
 
 //    @Autowired
 //    private JwtUtils jwtUtils;

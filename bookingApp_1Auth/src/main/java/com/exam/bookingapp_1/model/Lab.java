@@ -16,6 +16,6 @@ public class Lab {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(columnDefinition = "labname")
+    @Column(name = "labname")
     private String labname;
 }

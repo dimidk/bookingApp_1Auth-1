@@ -5,6 +5,7 @@ import com.exam.bookingapp_1.service.BusersDetailsService;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -28,8 +29,10 @@ import java.util.Properties;
 public class ApplicationConfig {
 
 
-    private final BusersRepository busersRepository;
-    private final BusersDetailsService busersDetailsService;
+    @Autowired
+    private BusersRepository busersRepository;
+    @Autowired
+    private BusersDetailsService busersDetailsService;
 
 //    @Bean
 //    public UserDetailsService userDetailsService() {

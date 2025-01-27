@@ -78,7 +78,7 @@
   <form th:action="@{/register}" method="post">
     <div class="form-group">
       <label for="username">Username</label>
-      <input type="text" id="username" name="username" placeholder="Enter your username" required>
+      <input type="text" id="username" name="username" placeholder="Enter your username" required onchange="checkingUsername()">
     </div>
     <div class="form-group">
       <label for="email">Edu Email</label>
@@ -118,9 +118,25 @@
     let strEmail = email.value;
     console.log("this is the email " + strEmail);
     if (!strEmail.toString().split("@")[1].includes('mail.ntua.gr')) {
-      alert("this email is not accepted! Give your edu email for example user@mail.ntua.gr")
+      alert("this email is not accepted! Give your edu email for example user@mail.ntua.gr");
       email.value="";
     }
+
+  }
+
+  function checkingUsername() {
+
+    let strUsername = username.value;
+    console.log("this is the username " + strUsername);
+    if (strUsername.toString().startsWith("el") || strUsername.toString().startsWith("nm") ||
+            strUsername.toString().startsWith("mc") || strUsername.toString().startsWith("mcp") ||
+            strUsername.toString().startsWith("ch") || strUsername.toString().startsWith("ar") ||
+            strUsername.toString().startsWith("cv") || strUsername.toString().startsWith("rs")) {
+      alert("this username is not accepted!");
+      username.value='';
+
+    }
+
 
   }
 

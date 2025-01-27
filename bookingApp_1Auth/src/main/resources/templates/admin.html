@@ -1,127 +1,177 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
-  <title>Administration</title>
-<!--  <link rel="stylesheet" th:href="@{/css/style.css}">-->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <link rel="stylesheet"
+        href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
+  <script
+          src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+
+  <!--  //I use the media=print and loads my stylesheet-->
+  <link rel="stylesheet" media="print"  href="/css/assets_css_fullcalendar.print.css">
+  <link rel="stylesheet" href="/css/fullcalendar.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+
+
   <style>
-    /* Basic styling for a more modern look */
+
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .login-container {
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      width: 300px;
-      text-align: center;
-    }
-    .login-container h2 {
-      color: #333333;
-      margin-bottom: 20px;
-    }
-    .form-group {
-      margin-bottom: 15px;
-      text-align: left;
-    }
-    .form-group label {
-      display: block;
-      font-size: 14px;
-      color: #666666;
-      margin-bottom: 5px;
-    }
-    .form-group input {
-      width: 100%;
-      padding: 10px;
-      font-size: 14px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-    .form-group input:focus {
-      border-color: #0066cc;
-      outline: none;
-    }
-    .form-group button {
-      width: 100%;
-      padding: 10px;
-      background-color: #0066cc;
-      color: #ffffff;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    .form-group button:hover {
-      background-color: #004a99;
-    }
-    .message {
-      margin-top: 15px;
+      margin: 40px 10px;
+      padding: 0;
+      font-family: Helvetica,Arial,Verdana,sans-serif;
       font-size: 14px;
     }
-    .message.error {
-      color: #cc0000;
+
+    #calendar {
+      max-width: 900px;
+      margin: 0 auto;
     }
-    .message.success {
-      color: #00a500;
+    .no-titlebar .ui-dialog-titlebar {
+      display: none;
     }
+    #description { margin-bottom:12px; width:100%; padding: .4em; }
+
+    #fieldset { padding:0; border:0; margin-top:25px; height: 200px;}
+    .hide_block
+    {
+      display:none  !important;
+    }
+
+
   </style>
+  <title>Administration</title>
+
+
 </head>
 <body>
-<div class="login-container">
-  <h2>Administration Form</h2>
-  <form th:action="@{/loadLastyear}" method="post">
-    <div class="form-group">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" placeholder="Enter your username" required>
+
+
+
+<div th:replace="~{header :: header}"></div>
+
+<div id='script-warning'  >
+  <div class="btn-group-vertical btn-group-sm" role="group" aria-label="author button">
+
+    <h3>OnLine Booking App Administration </h3>
+    <div class="btn-group-sm">
+      <button type="button" id="whichuser">Author:Administrator</button>
+    </div><hr>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="login-container">
+          <h4>Loading Last Year/Semester Bookings</h4><hr>
+<!--   th:action="@{/loadLastYear}"         -->
+          <form  method="post">
+
+            <div class="form-group">
+              <label for="adminusername">Select user</label>
+              <input type="text" id="adminusername" name="adminusername" placeholder="Enter your username" list="usernames" required>
+              <datalist id="usernames">
+                <option th:each="user : ${users}"  th:text="${user}"></option>
+              </datalist>
+            </div><br>
+
+            <div class="form-group">
+              <label for="adminlabname">Select lab</label>
+              <input type="text" id="adminlabname" name="adminlabname" placeholder="Enter the lab name" list="labs" required>
+              <datalist id="labs">
+                <option th:each="lab : ${labs}"  th:text="${lab}"></option>
+              </datalist>
+            </div><br>
+
+            <div class="form-group">
+              <label for="startSemesterDate"><b>Έναρξη Εξαμήνου: </b></label>
+              <input type="date" id="startSemesterDate" name="startSemesterDate" required />
+            </div><br>
+
+            <div class="form-group">
+              <button type="submit" id="loadForm" >Load</button>
+              <button type="reset">Reset</button>
+            </div>
+            <div class="form-group">
+
+            </div>
+          </form>
+
+          <div th:if="${param.error}" class="message error">
+            <p>Invalid username or password. Please try again.</p>
+          </div>
+          <div th:if="${param.logout}" class="message success">
+            <p>You have been logged out successfully.</p>
+          </div>
+        </div>
+        </div>
+
+        <div class="col-md-6 ">
+          <div>
+            <h4>Backing up database information</h4><br><hr>
+          </div>
+          <form th:action="@{/exportDatabase}" method="post">
+            <div class="form-group">
+              <label for="exportDatabase">Export Database </label>
+              <input type="email" id="exportDatabase" name="exportDatabase" placeholder="Given Database">
+            </div><br>
+            <div class="form-group">
+              <button type="submit" class="btn-group-sm">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-    <div class="form-group">
-      <label for="email">Edu Email</label>
-      <input type="text" id="email" name="email" placeholder="Enter your edu email" required onchange="checkingEmail()">
-    </div>
-    <div class="form-group">
-      <label for="fullname">Full Name</label>
-      <input type="text" id="fullname" name="fullname" placeholder="Enter your Full Name" required>
-    </div>
-<!--    <div class="form-group">-->
-<!--      <label for="firstname">First Name</label>-->
-<!--      <input type="text" id="firstname" name="firstname" placeholder="Enter your First Name" required>-->
-<!--    </div>-->
-    <div class="form-group">
-      <button type="submit">Register</button>
-    </div>
-  </form>
-  <div th:if="${param.error}" class="message error">
-    <p>Invalid username or password. Please try again.</p>
-  </div>
-  <div th:if="${param.logout}" class="message success">
-    <p>You have been logged out successfully.</p>
   </div>
 </div>
 
+
 </body>
-
-
-
 </html>
 
 
 <script>
 
-  function checkingEmail() {
+  const adminusername = document.getElementById("adminusername");
+  const adminlabname = document.getElementById("adminlabname");
+  const startSemester = document.getElementById("startSemesterDate");
+  const load = document.getElementById("loadForm");
 
-    let strEmail = email.value;
-    console.log("this is the email " + strEmail);
-    if (!strEmail.toString().split("@")[1].includes('mail.ntua.gr')) {
-      alert("this email is not accepted! Give your edu email for example user@mail.ntua.gr")
-      email.value="";
+
+  load.addEventListener('click', async function (e) {
+    e.preventDefault();
+
+    console.log("in event listener");
+
+    let bodyInfo = "adminusername="+ adminusername.value+"&adminlabname="+adminlabname.value + "&startSemesterDate="+startSemester.value;
+
+    try {
+      const response = await fetch("loadLastYear", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        body: bodyInfo
+      });
+
+      if (response.ok) {
+        console.log("bookings loaded successfuly!");
+        location.reload();
+      } else {
+        console.error("an Error occured!");
+        alert("Error loading bookings! Try again!");
+      }
+    }catch (error) {
+      console.error("An error occurred during the request:", error);
+      alert("An unexpected error occurred. Please try again.");
     }
 
-  }
+  }, true);
 
 </script>

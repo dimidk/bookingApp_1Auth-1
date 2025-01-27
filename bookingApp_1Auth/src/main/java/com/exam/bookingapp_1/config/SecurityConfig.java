@@ -33,7 +33,8 @@ public class SecurityConfig {
                                 .requestMatchers("/logout").permitAll()
                                 .requestMatchers("/login").permitAll()
                                 .requestMatchers("/register").permitAll()
-                                .requestMatchers("/static_calendar").permitAll()
+                                .requestMatchers("/registeredUsers").permitAll()
+                                .requestMatchers("/admin").hasAuthority("ADMIN")
                                // .requestMatchers("/depya").hasRole("USER")
                                 .anyRequest().authenticated());
                 http.formLogin(form -> form.loginPage("/login").permitAll()

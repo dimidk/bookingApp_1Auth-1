@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/***
+ * Service responsible for managing reserved Time Slots
+ ***/
+
 @Service
 @AllArgsConstructor
 @Slf4j
@@ -27,8 +31,6 @@ public class ReservedSlotsService {
     public List<ReservedSlots> getAllSlots() {
         return reservedSlotsRepository.findAll();
     }
-
-    //public List<ReservedSlots> getAllInRange();
 
     public List<ReservedSlots> getReservedSlotsBetween (String labname, LocalDateTime start,LocalDateTime end) {
 

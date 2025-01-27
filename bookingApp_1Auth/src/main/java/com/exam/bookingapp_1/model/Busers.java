@@ -2,7 +2,11 @@ package com.exam.bookingapp_1.model;
 
 import com.exam.bookingapp_1.model.Brole;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,17 +23,17 @@ import java.util.Set;
 @Setter
 @Builder
 @Table(name="labuser")
-public class Busers implements UserDetails {
+public  class Busers implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(columnDefinition = "username")
+    @Column(name = "username")
     private String username;
 
 
-    @Column(columnDefinition="email")
+    @Column(name = "email")
     private String email;
 
 //
@@ -51,9 +55,10 @@ public class Busers implements UserDetails {
 
     @Override
     public String getPassword() {
-        //return this.email;
         return "";
     }
+
+
 //    private Set<Brole> roles;
 
 }

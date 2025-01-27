@@ -2,10 +2,14 @@ package com.exam.bookingapp_1.service;
 
 import com.exam.bookingapp_1.model.Brole;
 import com.exam.bookingapp_1.model.Busers;
+import com.exam.bookingapp_1.model.Busers;
 import com.exam.bookingapp_1.model.Role;
 import com.exam.bookingapp_1.repository.BusersRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.flogger.Flogger;
+import lombok.extern.log4j.Log4j;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.security.core.GrantedAuthority;
 //import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,6 +33,7 @@ public class BusersService {
     @Autowired
     BusersRepository busersRepository;
 
+
     //@Override
     public Busers loadUser(String username) throws  UserPrincipalNotFoundException {
 
@@ -41,7 +46,8 @@ public class BusersService {
             throw new UserPrincipalNotFoundException("User not found");
 
         }
-        log.info("this is the username exists: {}", username);
+
+       // info(");
 //      user.get().getRoles().stream().map(Brole::getBrolename).collect(Collectors.toSet())
         log.info("this is the user object: name: {},password: {}, role: {}",user.get().getUsername(),user.get().getPassword());
 
@@ -76,8 +82,10 @@ public class BusersService {
         }
 
 
+
         Busers newUser = Busers.builder()
                 .username(username)
+
                 .email(busers.getEmail())
                 .role(Role.USER)
                 .fullname(busers.getFullname())
