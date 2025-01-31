@@ -15,6 +15,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://npmcdn.com/flatpickr/dist/110n/gr.js"></script>
+
 
 <!--  //I use the media=print and loads my stylesheet-->
   <link rel="stylesheet" media="print"  href="/css/assets_css_fullcalendar.print.css">
@@ -46,8 +50,6 @@
     {
       display:none  !important;
     }
-
-
   </style>
   <title></title>
 
@@ -80,15 +82,12 @@
 
 <script>
 
-  const displayInputForDate = document.getElementById('startDate');
-  const displayInputForDateEnd = document.getElementById('endDate');
-
-  const repetitionBook = document.getElementById('bookRepeat');
-  const depyA = document.querySelector("#A");
-  const depyB = document.querySelector("#B");
-  const depyC = document.querySelector("#C");
-  let depyId ='';
-  let whichLab ='';
+  // const repetitionBook = document.getElementById('bookRepeat');
+  // const depyA = document.querySelector("#A");
+  // const depyB = document.querySelector("#B");
+  // const depyC = document.querySelector("#C");
+  // let depyId ='';
+  // let whichLab ='';
   //this is the authenticated user that is displayed
   let whichLabUser = '';
 
@@ -99,10 +98,8 @@
   let dateEnd = '';
   let titleEvent = '';
   let newEvent = null;
-  let myModal = null;
   let editDialog = null;
   let modifiedEvent = null;
-  let token = null;
 
 
   //authenticated user is tried to fetched;
@@ -140,31 +137,31 @@
 
   console.log("authUser in main script is whichLabUsername: " + whichLabUsername);
 
-  function saveEvent(event) {
-
-    let clickedEvent = {
-      id: event.id,
-      start: event.start,
-      end: event.end
-    };
-
-    getEventById(clickedEvent).then((returnedEvent) => {
-      if (returnedEvent) {
-
-      }
-
-    });
-
-  }
-
-  function showInputButtons() {
-
-
-    // let displayInputForDate = document.getElementById('startDate');
-    document.getElementById('startDate').setAttribute('type', 'datetime-local');
-    document.getElementById('endDate').setAttribute('type','datetime-local');
-
-  }
+  // function saveEvent(event) {
+  //
+  //   let clickedEvent = {
+  //     id: event.id,
+  //     start: event.start,
+  //     end: event.end
+  //   };
+  //
+  //   getEventById(clickedEvent).then((returnedEvent) => {
+  //     if (returnedEvent) {
+  //
+  //     }
+  //
+  //   });
+  //
+  // }
+  //
+  // function showInputButtons() {
+  //
+  //
+  //   // let displayInputForDate = document.getElementById('startDate');
+  //   document.getElementById('startDate').setAttribute('type', 'datetime-local');
+  //   document.getElementById('endDate').setAttribute('type','datetime-local');
+  //
+  // }
 
   async function getEventById(clickedEvent) {
 
@@ -190,18 +187,8 @@
     }
   }
 
-  function modalSaveAction(e) {
-    e.preventDefault();
-    myModal.hide();
-    addEvent();
-
-  }
 
   async function modifyEvent(){
-    //event.preventDefault();
-
-    // console.log("modifyEvent: changing event with new data " + );
-
     let resultOfModifiedEvent ;
 
     let resultOfModifiedEventJson = await fetch("/updateBooking", {
@@ -211,7 +198,6 @@
         'Content-Type': 'application/json'
       }
     });
-
     if (resultOfModifiedEventJson.ok) {
 
       resultOfModifiedEvent = await resultOfModifiedEventJson.json();
@@ -226,8 +212,7 @@
 
   async function addEvent() {
 
-    event.preventDefault();
-
+    //e.preventDefault();
     console.log("addEvent: adding new event with data " + newEvent.title + " " + newEvent.start + " " +newEvent.end);
     let resultFromAddEventJson = await fetch("/newbooking",{
       method: 'POST',
@@ -323,17 +308,6 @@
 
   }
 
-  function createModal(dateStartStr,timeStartStr,dateEndStr,timeEndStr) {
-
-    console.log("createModal: create modal with modalDate and time, labname,username");
-    myModal = new bootstrap.Modal(document.getElementById('exampleModal'));
-    var modalDateStart = document.getElementById('startDateFromCal').innerText = dateStartStr + "  at:" + timeStartStr;
-    var modalDateEnd = document.getElementById('endDateFromCal').textContent = dateEndStr + "  at:" + timeEndStr;
-    var modalLabname = document.getElementById('labname');
-    modalLabname.textContent = 'ΔΕΠΥ Α';
-
-    document.getElementById('labuser').textContent = whichLabUsername;
-  }
 
   async function getAllBookings() {
     const allBookings = await fetch("/allBookings",{
@@ -357,23 +331,23 @@
 
   }
 
-
   function loadCalendar() {
 
     calendar.render();
     //location.reload();
   }
 
-
-  async function getAllEvents() {
-    const eventsAll = await fetch(urlA,{
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    return await eventsAll.json();
+  function loadingDate(date) {
+    calendar.gotoDate(date);
   }
+
+  function convertIsoDate(dateFormat) {
+    let [day,month,year] = dateFormat.split("-");
+    return `${year}-${month}-${day}`;
+
+  }
+
+
 
 //selectConstraint για να κλειδώνει μόνο μια μέρα
   //selectOverlap για να μην γίνεται overlap του άλλου η κράτηση όχι όμως μεταξύ κρατήσεων του ίδιου χρήστη
@@ -384,6 +358,12 @@
   const calendar = new FullCalendar.Calendar(calendarEl, {
 
     initialView: 'timeGridWeek',
+    headerToolbar: {
+      right: 'prev,next,today',
+      center: 'title',
+      left: 'listWeek,timeGridWeek'
+    },
+
     selectable: true,
     selectOverlap: false,
     selectConstraint: {
@@ -400,17 +380,23 @@
 
 //#378006
     //#FFC107
+    //FFB107
+    //AFC107
     events:
             {
               url: '/displayBookingsA',
               type: 'GET',
-              color: '#FFC107',
+              color: '#FFB107',
               textColor: 'black'
             },
     //events: [allEvents],
     // red areas where no events can be dropped
     eventOverlap: false,
+    eventsRefresh: function(info) {
+      console.log("refresh event");
+    },
     select: async function(info) {
+
 
       let dateStartStr = info.startStr.split('T')[0];
       let timeStartStr = info.startStr.split('T')[1].split('+')[0];
@@ -425,11 +411,7 @@
       dateEnd = dateEndStr + " " + timeEndStr;
       console.log("date and time end in string:" + dateEnd);
 
-      //createModal(dateStartStr,timeStartStr,dateEndStr,timeEndStr);
-
       await  getAllBookings().then();
-      //newEvent.title = modalEventTitle.value.trim();
-    //  myModal.show();
 
       createDialog = $("#create-dialog").dialog({
         autoOpen: false,
@@ -437,16 +419,22 @@
         width: 350,
         modal: true,
         buttons: {
-          Cancel: function () {
-            $(this).dialog("close");
-          },
+
           Save: async function(e) {
             e.preventDefault();
 
             if (document.getElementById("recursionCheckbox").checked) {
 
-              let dateStartRecur = document.getElementById("newStartDate").value;
-              let dateEndRecur = document.getElementById("newEndDate").value;
+              let dateStartFormat = document.getElementById("newStartDate").value;
+              // let [day,month,year] = dateStartFormat.split("-");
+              // let dateStartRecur = `${year}-${month}-${day}`;
+              let dateStartRecur = convertIsoDate(dateStartFormat);
+
+              let dateEndFormat = document.getElementById("newEndDate").value;
+              // [day,month,year] = dateEndFormat.split("-");
+              // let dateEndRecur = `${year}-${month}-${day}`;
+              let dateEndRecur = convertIsoDate(dateEndFormat);
+
               console.log("Recursion Start Date: " + dateStartRecur);
               console.log("Recursion End Date: " + dateEndRecur);
 
@@ -458,27 +446,53 @@
               else {
 
                 location.reload();
+
+
               }
               $(this).dialog("close");
               console.log("result from adding recursing Event "+ result);
             } else {
-                let result = await addEvent().then();
-                if (!result) {
-                  alert("Your selection tries to reserve lab in reserved date");
-                } else {
+              let result = await addEvent().then();
+              if (!result) {
+                alert("Your selection tries to reserve lab in reserved date");
+              }
+              // else {
+              //
+              //
+              //   //this reload from database entry and displays event on calendar
+              //   location.reload();
+              //
+              //   calendar.gotoDate(localStorage.getItem('currentDate'));
+              //
+              // }
 
-
-                  //this reload from database entry and displays event on calendar
-                  location.reload();
-
-                  }
-                $(this).dialog("close");
-                console.log("result from adding Event " + result);
             }
 
-            //$(this).dialog("submit")
+            $(this).dialog("close");
+            let currentDate = calendar.getDate();
+            // localStorage.setItem('currentDate',currentDate.toISOString());
+            console.log("current Date is " + currentDate);
+
+            location.reload();
+
+
+            // console.log("result from adding Event " + result);
+
+            window.confirm("Do you want to continue?")
+
+            //calendar.gotoDate(localStorage.getItem(currentDate));
+
+            if (confirm("Do you want to continue?")) {
+
+              let calendar1 = $("#calendar").fullCalendar('getCalendar');
+              calendar1.gotoDate(currentDate);
+
+            }
           },
 
+          Cancel: function () {
+            $(this).dialog("close");
+          },
 
 
         },
@@ -488,73 +502,19 @@
       });
 
 
-      //var modalSaveChanges = document.getElementById('modalSave');
+      $("#startDateFromCal").val(info.start);
+      $("#endDateFromCal").val(info.end);
+      $("#labname").val("ΔΕΠΥ Α");
+      $("#labuser").val(whichLabUsername);
 
-      // modalSaveChanges.addEventListener('click',async function (e) {
-      //   e.preventDefault();
-      //   var modalEventTitle = document.getElementById('eventTitle');
-      //   console.log('submit data from modal '+ modalSaveChanges.id);
-      //   console.log('title event ' + modalEventTitle.value.trim());
-      //   myModal.hide();
-      //
-      //   newEvent.title = "Event: " + modalEventTitle.value.trim() + " Υπεύθυνος: " + whichLabUsername;
-      //
-      //   if (document.getElementById("recursionCheckbox").checked) {
-      //
-      //     let dateStartRecur = document.getElementById("newStartDate").value;
-      //     let dateEndRecur = document.getElementById("newEndDate").value;
-      //     console.log("Recursion Start Date: " + dateStartRecur);
-      //     console.log("Recursion End Date: " + dateEndRecur);
-      //
-      //     let result = await addRecursionEvent(dateStartRecur,dateEndRecur).then();
-      //     console.log("HttpStatus from recurring booking ",result);
-      //     if (result !== 200) {
-      //       alert("Your selections are overlapping other reservations");
-      //     }
-      //     else {
-      //       location.reload();
-      //     }
-      //
-      //     console.log("result from adding recursing Event "+ result);
-      //   }
-      //   else {
-      //     let result = await addEvent().then();
-      //     if (!result) {
-      //       alert("Your selection tries to reserve lab in reserved date");
-      //     }
-      //     else {
-      //
-      //
-      //       //this reload from database entry and displays event on calendar
-      //       location.reload();
-      //
-      //     }
-      //
-      //     console.log("result from adding Event "+ result);
-      //   }
-      //
-      // },true);
+      let modalEventTitle = document.getElementById('eventTitle');
+      modalEventTitle.addEventListener("input",function() {
 
-      let modalDateStart = document.getElementById("startDateFromCal");
-      modalDateStart.textContent = dateStartStr+" at"+timeStartStr;
+        console.log("info",modalEventTitle.value.trim());
+        newEvent.title = modalEventTitle.value.trim() + "\nΥπεύθυνος: " +whichLabUsername ;
+        console.log("event with: " + newEvent.id + " "+ newEvent.start +" "+ newEvent.end + " "+ newEvent.title + " " + newEvent.username);
 
-      //let modalDateStart = document.getElementById('startDateFromCal').innerText = dateStartStr + "  at:" + timeStartStr;
-      let modalDateEnd = document.getElementById('endDateFromCal').textContent = dateEndStr + "  at:" + timeEndStr;
-      let modalLabname = document.getElementById('labname');
-      modalLabname.textContent = 'ΔΕΠΥ Α';
-
-      document.getElementById('labuser').textContent = whichLabUsername;
-
-      var modalEventTitle = document.getElementById('eventTitle');
-      console.log('submit data from modal ');
-      console.log('title event ' + modalEventTitle.value.trim());
-      //myModal.hide();
-
-      newEvent.title = "Event: " + modalEventTitle.value.trim() + " Υπεύθυνος: " + whichLabUsername;
-
-      console.log("event with: " + newEvent.id + " "+ newEvent.start +" "+ newEvent.end + " "+ newEvent.title);
-      //myModal.remove();
-
+      });
 
       createDialog.dialog("open");
 
@@ -591,11 +551,27 @@
         location.reload();
       }
     },
-    eventClick: function(eventClickInfo) {
+    eventClick: async function(eventClickInfo) {
 
       let eventID = eventClickInfo.event.id;
       let eventStartDate = eventClickInfo.event.startStr.split('T')[0] + " " + eventClickInfo.event.startStr.split('T')[1].split('+')[0];
-      let eventEndDate = eventClickInfo.event.endStr.split('T')[0] + " " + eventClickInfo.event.endStr.split('T')[1].split('+')[0];;
+      let eventEndDate = eventClickInfo.event.endStr.split('T')[0] + " " + eventClickInfo.event.endStr.split('T')[1].split('+')[0];
+
+
+      const eventToDelete = await fetch('bookingLab/' + eventID, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log("getting id of event is going to be deleted ");
+      let eventToDeleteJson = await eventToDelete.json();
+
+      console.log("eventToDelete username " + eventToDeleteJson.username);
+      console.log("eventToDelete id " + eventToDeleteJson.id);
+
+      console.log("eventToDelete logged user " + whichLabUsername);
 
       editDialog = $("#edit-dialog-form").dialog({
         autoOpen: false,
@@ -608,21 +584,8 @@
 
             let deleteRecur = document.getElementById("recursionDeletionCheckbox");
 
-            const eventToDelete = await fetch('bookingLab/' + eventID, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            });
-
             if (eventToDelete.ok) {
-              console.log("getting id of event is going to be deleted ");
-              let eventToDeleteJson = await eventToDelete.json();
 
-              console.log("eventToDelete username " + eventToDeleteJson.username);
-              console.log("eventToDelete id " + eventToDeleteJson.id);
-
-              console.log("eventToDelete logged user " + whichLabUsername);
               if (eventToDeleteJson.username !== whichLabUsername && whichLabUsername !== "admin") {
                 alert("dont have any permission");
                 location.reload();
@@ -630,8 +593,10 @@
 
                 if (deleteRecur.checked) {
 
-                  let deleteStartDate = document.getElementById("deletionStartDate").value;
-                  let deleteEndDate = document.getElementById("deletionEndDate").value;
+                  let deleteStartFormat = document.getElementById("deletionStartDate").value;
+                  let deleteStartDate = convertIsoDate(deleteStartFormat);
+                  let deleteEndFormat = document.getElementById("deletionEndDate").value;
+                  let deleteEndDate = convertIsoDate(deleteEndFormat);
                   console.log("delete all repeated events on start date:" + deleteStartDate);
                   console.log("delete all repeated events on end date:" + deleteEndDate);
 
@@ -668,9 +633,15 @@
 
       //editDialog.attr("modtitle",eventClickInfo.event.title);
       console.log("event start date:" + eventClickInfo.event.startStr);
+      console.log("event info " + eventClickInfo.event.title);
 
+      let modTitle = document.getElementById("modtitle");
+      modTitle.textContent = eventClickInfo.event.title.split("\n")[0];
+      modTitle.style.fontStyle = "italic";
+      modTitle.style.fontWeight = "bold";
 
-      $("#modtitle").val(eventClickInfo.event.title);
+      //$("#modtitle").val(eventClickInfo.event.title.split("\n")[0]);
+      $("#modUsername").val(eventToDeleteJson.username);
       $("#modstartdateandtime").val(eventClickInfo.event.start);
       $("#modenddateandtime").val(eventClickInfo.event.end);
       editDialog.dialog("open");
@@ -704,30 +675,32 @@
 </script>
 
 
-<div id="create-dialog" title="New Reservation" class="ui-helper-hidden">
+<div id="create-dialog" title="Νέα Κράτηση" class="ui-helper-hidden">
 
   <form id="create-event-form">
     <fieldset>
-
-      <input id="eventTitle" type="text" autocomplete="nope" class="form-control" /><br>
+      <div>
+      <input id="eventTitle" type="text" autocomplete="nope" class="text ui-widget-content ui-corner-all form-control"
+      placeholder="Μάθημα ..... "/><br>
+      </div>
 
       <div>
         <label for="startDateFromCal"><b>Έναρξη: </b></label>
-        <button id="startDateFromCal" type="button"></button>
-<!--        <span id="startDateFromCal"></span>-->
-      </div>
+        <input id="startDateFromCal" type="datetime-local" placeholder="dd-mm-yyyy" class="text ui-widget-content ui-corner-all" />
+      </div><br>
       <div>
         <label for="endDateFromCal"><b>Λήξη: </b></label>
-        <span id="endDateFromCal"></span>
-      </div>
+<!--        <input id="endDateFromCal" type="text" class="text ui-widget-content ui-corner-all"/>-->
+        <input id="endDateFromCal" type="datetime-local" class="text ui-widget-content ui-corner-all"/>
+      </div><br>
       <div>
         <label for="labname"><b>Εργαστήριο: </b></label>
-        <span id="labname"></span>
-      </div>
+        <input id="labname" type="text" class="text ui-widget-content ui-corner-all"/>
+      </div><br>
       <div>
         <label for="labuser"><b>Υπεύθυνος: </b></label>
-        <span id="labuser"></span>
-      </div>
+        <input id="labuser" type="text" class="text ui-widget-content ui-corner-all"/>
+      </div><br>
 
       <div class="form-check my-3">
         <input
@@ -737,7 +710,7 @@
                 onclick="toggleRecursionFields()"
         />
         <label class="form-check-label" for="recursionCheckbox">
-          Επανάληψη κράτησης
+          Εβδομαδιαία Επανάληψη κράτησης
         </label>
       </div>
 
@@ -745,100 +718,69 @@
       <div id="recursionFields" style="display: none;">
         <div class="mb-3">
           <label for="newStartDate"><b>Νέα Έναρξη: </b></label>
-          <input type="date" id="newStartDate" class="form-control" />
+          <input type="date" id="newStartDate" placeholder="Select starting date...." class="form-control" />
         </div>
         <div class="mb-3">
           <label for="newEndDate"><b>Νέα Λήξη: </b></label>
-          <input type="date" id="newEndDate" class="form-control" />
+          <input type="date" id="newEndDate" placeholder="Select ending date...." class="form-control" />
         </div>
       </div>
-
-
-<!--      <button data-close-modal>Close</button>-->
-<!--      <button data-save-modal>Save</button>-->
 
     </fieldset>
   </form>
 
+
+  <script>
+    flatpickr("#startDateFromCal", {
+      enableTime: true,
+      time_24hr: true,
+      dateFormat: "d-m-Y H:i",
+      allowInput: true
+    });
+    flatpickr("#endDateFromCal", {
+      enableTime: true,
+      time_24hr: true,
+      dateFormat: "d-m-Y H:i K",
+      allowInput: true
+    });
+    flatpickr("#newStartDate", {
+      dateFormat: "d-m-Y",
+      allowInput: true
+    });
+    flatpickr("#newEndDate", {
+      dateFormat: "d-m-Y",
+      allowInput: true
+    });
+  </script>
+
 </div>
 
-<!--<div id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" class="modal fade" aria-hidden="true">-->
-<!--  <div class="modal-dialog">-->
-<!--    <div class="modal-content">-->
-<!--      <div class="modal-header">-->
-<!--        <h5 class="modal-title" id="exampleModalLabel">Νέα Κράτηση Εργαστηρίου</h5>-->
-<!--        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
-<!--      </div>-->
-<!--      <div class="modal-body">-->
-<!--        <form autocomplete="off" action="">-->
-<!--          <div class="form-group">-->
-<!--            <h6>Κράτηση για: </h6>-->
-<!--            <input id="eventTitle" type="text" autocomplete="nope" class="form-control" /><br>-->
-
-<!--            <div>-->
-<!--              <label for="startDateFromCal"><b>Έναρξη: </b></label>-->
-<!--              <span id="startDateFromCal"></span>-->
-<!--            </div>-->
-<!--            <div>-->
-<!--              <label for="endDateFromCal"><b>Λήξη: </b></label>-->
-<!--              <span id="endDateFromCal"></span>-->
-<!--            </div>-->
-<!--            <div>-->
-<!--              <label for="labname"><b>Εργαστήριο: </b></label>-->
-<!--              <span id="labname"></span>-->
-<!--            </div>-->
-<!--            <div>-->
-<!--              <label for="labuser"><b>Υπεύθυνος: </b></label>-->
-<!--              <span id="labuser"></span>-->
-<!--            </div>-->
-
-<!--            <div class="form-check my-3">-->
-<!--              <input-->
-<!--                      class="form-check-input"-->
-<!--                      type="checkbox"-->
-<!--                      id="recursionCheckbox"-->
-<!--                      onclick="toggleRecursionFields()"-->
-<!--              />-->
-<!--              <label class="form-check-label" for="recursionCheckbox">-->
-<!--                Επανάληψη κράτησης-->
-<!--              </label>-->
-<!--            </div>-->
-
-<!--            &lt;!&ndash; Recursion Fields &ndash;&gt;-->
-<!--            <div id="recursionFields" style="display: none;">-->
-<!--              <div class="mb-3">-->
-<!--                <label for="newStartDate"><b>Νέα Έναρξη: </b></label>-->
-<!--                <input type="date" id="newStartDate" class="form-control" />-->
-<!--              </div>-->
-<!--              <div class="mb-3">-->
-<!--                <label for="newEndDate"><b>Νέα Λήξη: </b></label>-->
-<!--                <input type="date" id="newEndDate" class="form-control" />-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </form>-->
-<!--      </div>-->
-<!--      <div class="modal-footer">-->
-<!--        <button type="button" id="modalClose" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>-->
-<!--        <button type="button" id="modalSave" class="btn btn-primary">Save</button>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--  </div>-->
-<!--</div>-->
 
 
 <div id="edit-dialog-form" title="Λεπτομέρειες Κράτησης" class="ui-helper-hidden">
   <form id="edit-event-form">
     <fieldset>
-      <label ><b>Λόγος Κράτησης: </b></label>&nbsp;&nbsp;
-      <input type="text"  name="modtitle" id="modtitle" value="New Event" class="text ui-widget-content ui-corner-all"/><br><br>
 
+      <label ><b>Κράτηση: </b></label>&nbsp
+      <p>
+        <span name="modtitle" id="modtitle" class="text ui-widget-content ui-corner-all">
+
+        </span>
+      </p>
+
+<!--      <input type="text"  name="modtitle" id="modtitle" class="text ui-widget-content ui-corner-all" /><br><br>-->
+
+      <p>
+      <label for="modUsername"><b>Υπεύθυνος:</b></label>&nbsp;&nbsp;
+      <input type="text" id="modUsername"/>
+      </p>
+      <p>
       <label for="modstartdateandtime"><b>Έναρξη:</b></label>&nbsp;&nbsp;
       <input type="text" id="modstartdateandtime"/>
-      <br></br>
-
+      </p>
+      <p>
       <label for="modenddateandtime"><b>Λήξη:</b></label>&nbsp;&nbsp;
-      <input type="text" id="modenddateandtime"/>
+      <input type="text" id="modenddateandtime"/></p>
 
       <div class="form-check my-3">
         <input
@@ -856,11 +798,11 @@
       <div id="recursionDeletionFields" style="display: none;">
         <div class="mb-3">
           <label for="deletionStartDate"><b>Νέα Έναρξη: </b></label>
-          <input type="date" id="deletionStartDate" class="form-control" />
+          <input type="date" id="deletionStartDate" placeholder="Select starting date..." class="form-control" />
         </div>
         <div class="mb-3">
           <label for="deletionEndDate"><b>Νέα Λήξη: </b></label>
-          <input type="date" id="deletionEndDate" class="form-control" />
+          <input type="date" id="deletionEndDate" placeholder="Select ending date..." class="form-control" />
         </div>
       </div>
 
@@ -869,4 +811,15 @@
       <input type="submit" tabindex="-1" style="position:absolute; top:-1000px"/>
     </fieldset>
   </form>
+
+  <script>
+    flatpickr("#deletionStartDate", {
+    dateFormat: "d-m-Y",
+    allowInput: true
+    });
+    flatpickr("#deletionEndDate", {
+    dateFormat: "d-m-Y",
+    allowInput: true
+    });
+  </script>
 </div>

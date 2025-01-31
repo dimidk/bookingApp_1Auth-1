@@ -12,6 +12,8 @@ public interface ReservedSlotsRepository extends JpaRepository<ReservedSlots, In
 
     List<ReservedSlots> getReservedSlotsByStartBetween(LocalDateTime start, LocalDateTime end);
 
+    List<ReservedSlots> getReservedSlotsByStartEqualsAndEndEquals(LocalDateTime start, LocalDateTime end);
+
     List<ReservedSlots> getReservedSlotsByLabnameAndStartBetween(String labname, LocalDateTime start, LocalDateTime end);
 
     @Override
@@ -20,6 +22,10 @@ public interface ReservedSlotsRepository extends JpaRepository<ReservedSlots, In
     public void deleteAllByStartBetween(LocalDateTime start, LocalDateTime end);
 
     public List<ReservedSlots> getReservedSlotsByLabname(String labname);
+
+    public List<ReservedSlots> getReservedSlotsByLabnameAndStartEqualsAndEndEquals(String labname, LocalDateTime start, LocalDateTime end);
+
+    public List<ReservedSlots> getReservedSlotsByLabnameAndStart(String labname, LocalDateTime start);
 
     public List<ReservedSlots> getReservedSlotsByLabnameAndStartAfter(String labname, LocalDateTime start);
     public List<ReservedSlots> getReservedSlotsByLabnameAndEndAfter(String labname, LocalDateTime end);

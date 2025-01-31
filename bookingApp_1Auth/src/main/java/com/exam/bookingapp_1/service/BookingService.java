@@ -58,10 +58,11 @@ public class BookingService {
         bookingLabService.add(newEvent);
         reservedSlotsService.add(newResSlots);
 
-        ReservedSlots check = new ReservedSlots();
-        check.setStart(LocalDateTime.of(2024,12,5,13,30));
-        check.setEnd(LocalDateTime.of(2024,12,5,14,30));
-        log.info("New Reservation Slot overlaps: {}",newResSlots.overlaps(check));
+        //for testing puroposes to check overlaps
+//        ReservedSlots check = new ReservedSlots();
+//        check.setStart(LocalDateTime.of(2024,12,5,13,30));
+//        check.setEnd(LocalDateTime.of(2024,12,5,14,30));
+//        log.info("New Reservation Slot overlaps: {}",newResSlots.overlaps(check));
 
         return newEvent;
     }
@@ -161,14 +162,24 @@ public class BookingService {
         Optional<BookingLab> recordDeleted = bookingLabService.getBookingLabById(bookingLab.getId());
 
         boolean a = bookingLabService.deleteBookingLab(bookingLab.getId());
-        ReservedSlots resSlot = ReservedSlots.builder()
-                .labname(bookingLab.getLabname())
-                .start(bookingLab.getStart())
-                .end(bookingLab.getEnd())
-                .build();
-        reservedSlotsService.deleteReservedSlots(resSlot);
+//        ReservedSlots resSlot = ReservedSlots.builder()
+//                .labname(bookingLab.getLabname())
+//                .start(bookingLab.getStart())
+//                .end(bookingLab.getEnd())
+//                .build();
 
-        log.info("Booking Deleted with the corresponding TimeSlot");
+        List<ReservedSlots> allSlots = reservedSlotsService.getAllLabReservedSlots(bookingLab.getLabname());
+        allSlots.forEach(slot -> {
+            log.info("slot id with start date: {} {}",slot.getId(),slot.getStart());});
+
+        List<ReservedSlots> result = allSlots.stream().filter(res -> res.getStart().equals(bookingLab.getStart())).collect(Collectors.toList());
+
+        if (result.isEmpty()) {
+            log.info("no dates found");
+        }
+        result.forEach(slot -> {reservedSlotsService.deleteReservedSlots(slot);});
+
+
 
         return recordDeleted;
     }

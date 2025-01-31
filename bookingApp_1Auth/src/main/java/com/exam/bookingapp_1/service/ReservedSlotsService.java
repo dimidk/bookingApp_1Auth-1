@@ -5,9 +5,11 @@ import com.exam.bookingapp_1.repository.ReservedSlotsRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /***
  * Service responsible for managing reserved Time Slots
@@ -52,6 +54,35 @@ public class ReservedSlotsService {
     public List<ReservedSlots> getReservationsBefore (String labname, LocalDateTime time) {
         return reservedSlotsRepository.getReservedSlotsByLabnameAndEndAfter(labname,time);
     }
+
+
+
+//    public boolean findReservedSlotsByLabnameAndStartDateAndEndDate(String labname, LocalDateTime start, LocalDateTime end) {
+//
+//        //List<ReservedSlots> result = reservedSlotsRepository.getReservedSlotsByLabnameAndStartEqualsAndEndEquals(labname, start, end);
+//
+//        List<ReservedSlots> result = reservedSlotsRepository.getReservedSlotsByLabname(labname);
+//
+//
+//        //List<ReservedSlots> result = reservedSlotsRepository.getReservedSlotsByLabnameAndStart(labname, start);
+//        if (result.size() == 0) {
+//            log.info("Checking for reserved dates none");
+//        }
+//
+//
+//
+//        if (result.size() > 0) {
+//            //result.forEach(res -> log.info("Found reserved date:{} {}", res.getStart(), res.getEnd()));
+//
+//            result.stream().filter(s -> (s.getStart().equals(start) && s.getEnd().equals(end)))
+//                    .findFirst().ifPresent(reservedSlots -> reservedSlotsRepository.deleteById(reservedSlots.getId()));
+//
+//
+//            return true;
+//        }
+//
+//        return false;
+//    }
 
     public void deleteReservedSlots(ReservedSlots reservedSlot) {
       reservedSlotsRepository.delete(reservedSlot);
